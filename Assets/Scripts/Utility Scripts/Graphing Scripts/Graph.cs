@@ -229,9 +229,9 @@ public class Graph
         return newTile;
     }
 
-    public List<Node>BuildSubGraph(int root, int moveableDistance, int minRange, int maxRange)
+    public Graph BuildSubGraph(int root, int moveableDistance, int minRange, int maxRange)
     {
-        List<Node> subGraph = new List<Node>();
+        Graph subGraph = new Graph();
         Queue<Node> queue = new Queue<Node>();
         bool[] visited = new bool[maxNodes];
         int[] distanceFromStart = new int[maxNodes];
@@ -292,18 +292,17 @@ public class Graph
                     }
 
                 }
-                subGraph.Add(currentNode);
+                subGraph.graphNodes.Add(currentNode);
             }
             
         }
-        foreach(var node in subGraph)
+        foreach(var node in subGraph.graphNodes)
         {
             node.colorType = nodeColor[node.nodeIndex];
         }
 
         return subGraph;
     }
-
 
     private int FindMinDistance(int currentDistance, int nextDistance)
     {

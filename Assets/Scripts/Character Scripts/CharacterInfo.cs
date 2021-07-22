@@ -19,9 +19,9 @@ public class CharacterInfo : MonoBehaviour
     public CharacterData characterData;
     //public Graph moveableTiles;
     public List<Node> moveableTiles;
-    public List<Node> subGraph;
+    public Graph subGraph;
 
-    public GameObject currentTile;
+    public TileInfo currentTile;
 
     public WeaponData[] weaponList = new WeaponData[4];
 
@@ -66,27 +66,25 @@ public class CharacterInfo : MonoBehaviour
 
     public void MoveCharacter(GameObject newTile)
     {
-        int currentTileIndex;
 
         transform.position = newTile.transform.position;
 
-        currentTile.GetComponent<TileInfo>().SetUnoccupied();
+        currentTile.SetUnoccupied();
 
-        currentTile = newTile;
-        currentTileIndex = WorldStateInfo.Instance.mapTileGraph.graphNodes.Find(x => x.tile == currentTile).nodeIndex;
+        currentTile = newTile.GetComponent<TileInfo>();
 
         moveableTiles.Clear();
 
-        moveableTiles = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(currentTileIndex, characterData.MOVE, minRange, maxRange);
+        subGraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(currentTile.index, characterData.MOVE, minRange, maxRange);
+
+        moveableTiles = subGraph.graphNodes;
         GetTargetList();
         currentTile.GetComponent<TileInfo>().SetOccupied(this);
     }
 
     public void IntializeCharacter(GameObject startTile)
     {
-        int currentTileIndex;
-
-        currentTile = startTile;
+        currentTile = startTile.GetComponent<TileInfo>();
 
         if (weaponList[0] != null)
         {
@@ -99,12 +97,13 @@ public class CharacterInfo : MonoBehaviour
             maxRange = 0;
         }
 
-        currentTileIndex = WorldStateInfo.Instance.mapTileGraph.graphNodes.Find(x => x.tile == currentTile).nodeIndex;
 
-        moveableTiles = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(currentTileIndex, characterData.MOVE, minRange, maxRange);
+        subGraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(currentTile.index, characterData.MOVE, minRange, maxRange);
+
+        moveableTiles = subGraph.graphNodes;
         //moveableTiles.BuildGraph(currentTile, characterData.MOVE, minRange, maxRange);
 
-        subGraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(currentTile.GetComponent<TileInfo>().index, characterData.MOVE, minRange, maxRange);
+        
 
         //Debug.Log("SubGraph for " + this.gameObject);
         //foreach(var node in subGraph)
@@ -135,11 +134,11 @@ public class CharacterInfo : MonoBehaviour
     //Get nearby Targets post movement
     public void GetLocalTargets()
     {
-        List<Node> localTargetSubGraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(currentTile.GetComponent<TileInfo>().index, 0, minRange, maxRange);
-        List<Node> localSupportTargetSubGraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(currentTile.GetComponent<TileInfo>().index, 0, characterData.supportRangeMin, characterData.supportRangeMax);
+        Graph localTargetSubGraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(currentTile.GetComponent<TileInfo>().index, 0, minRange, maxRange);
+        Graph localSupportTargetSubGraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(currentTile.GetComponent<TileInfo>().index, 0, characterData.supportRangeMin, characterData.supportRangeMax);
         localTargets.Clear();
 
-        foreach(var tile in localTargetSubGraph)
+        foreach(var tile in localTargetSubGraph.graphNodes)
         {
             RaycastHit2D hit = Physics2D.Raycast(tile.tile.transform.position, new Vector2(0, 1), 0.1f, LayerMask.GetMask("CharacterLayer"));
             if (hit.collider != null && hit.collider.gameObject != this.gameObject && hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType == CHARACTER_TYPE.ENEMY)
@@ -148,7 +147,7 @@ public class CharacterInfo : MonoBehaviour
                 localTargets.Add(newTarget);
             }
         }
-        foreach(var tile in localSupportTargetSubGraph)
+        foreach(var tile in localSupportTargetSubGraph.graphNodes)
         {
             RaycastHit2D hit = Physics2D.Raycast(tile.tile.transform.position, new Vector2(0, 1), 0.1f, LayerMask.GetMask("CharacterLayer"));
             if (hit.collider != null && hit.collider.gameObject != this.gameObject && hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType == CHARACTER_TYPE.PLAYER)
