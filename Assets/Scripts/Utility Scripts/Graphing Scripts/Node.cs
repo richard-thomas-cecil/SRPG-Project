@@ -11,15 +11,15 @@ public enum COLOR_TYPE
 }
 public class Node
 {
-    public GameObject tile;
+    public TileInfo tile;
     public List<GameObject> tilesInRange;     //Tiles in attack range of this tile
     public COLOR_TYPE colorType;
     public bool visited;
     public int nodeIndex;
 
-    public Node(GameObject thisTile, int thisIndex)
+    public Node(TileInfo thisTile, int thisIndex)
     {
-        tile = thisTile;
+        tile = thisTile.GetComponent<TileInfo>();
         nodeIndex = thisIndex;
         colorType = COLOR_TYPE.NONE;
     }

@@ -28,7 +28,7 @@ public class Graph
         currentNodeIndex = 0;
 
 
-        startNode = AddNode(startingTile, 9999, 0, 0);
+        startNode = AddNode(startingTile.GetComponent<TileInfo>(), 9999, 0, 0);
     }
 
 
@@ -41,10 +41,10 @@ public class Graph
         currentNodeIndex = 0;
 
 
-        startNode = AddNode(startingTile, moveableDistance, minRange, maxRange);
+        startNode = AddNode(startingTile.GetComponent<TileInfo>(), moveableDistance, minRange, maxRange);
     }
 
-    private Node AddNode(GameObject thisTile, int moveableDistance, int minRange, int maxRange)
+    private Node AddNode(TileInfo thisTile, int moveableDistance, int minRange, int maxRange)
     {
         Node newTile = new Node(thisTile, currentNodeIndex);
         newTile.MarkVisited();
@@ -56,113 +56,144 @@ public class Graph
 
         
 
-        if (newTile.tile.GetComponent<TileInfo>().eastTile != null)
+        if (newTile.tile.eastTile != null)
         {
-            GameObject nextTile = newTile.tile.GetComponent<TileInfo>().eastTile;
-            Node adjacentNode = graphNodes.Find(x => x.tile == nextTile);
-            int adjacencyWeight = nextTile.GetComponent<TileInfo>().movementCost;
-            if(adjacentNode != null && adjacentNode.colorType == COLOR_TYPE.ATTACK)
-            {
-                graphNodes.Remove(adjacentNode);
-                adjacentNode = null;
-            }
-            if (adjacentNode == null)
-            {
-                if (adjacencyWeight <= moveableDistance)
-                {
-                    adjacentNode = AddNode(nextTile, moveableDistance - adjacencyWeight, minRange, maxRange);
-                }
-                else if (moveableDistance < adjacencyWeight)
-                {
-                    adjacentNode = AddRangeColorNode(nextTile, minRange, maxRange, 1, COLOR_TYPE.ATTACK);
-                    adjacencyWeight = 1;
-                }
-            }
+            //    TileInfo nextTile = newTile.tile.eastTile.GetComponent<TileInfo>();
+            //    Node adjacentNode = graphNodes.Find(x => x.tile == nextTile);
+            //    int adjacencyWeight = nextTile.movementCost;
+            //    if(adjacentNode != null && adjacentNode.colorType == COLOR_TYPE.ATTACK)
+            //    {
+            //        graphNodes.Remove(adjacentNode);
+            //        adjacentNode = null;
+            //    }
+            //    if (adjacentNode == null)
+            //    {
+            //        if (adjacencyWeight <= moveableDistance)
+            //        {
+            //            adjacentNode = AddNode(nextTile.gameObject, moveableDistance - adjacencyWeight, minRange, maxRange);
+            //        }
+            //        else if (moveableDistance < adjacencyWeight)
+            //        {
+            //            adjacentNode = AddRangeColorNode(nextTile.gameObject, minRange, maxRange, 1, COLOR_TYPE.ATTACK);
+            //            adjacencyWeight = 1;
+            //        }
+            //    }
+            Node adjacentNode = EvaluateNextTile(newTile.tile.eastTile.GetComponent<TileInfo>(), moveableDistance, minRange, maxRange);
+
             if (adjacentNode != null)
-                AddEdge(newTile.nodeIndex, adjacentNode.nodeIndex, adjacencyWeight);
+                AddEdge(newTile.nodeIndex, adjacentNode.nodeIndex, adjacentNode.tile.movementCost);
 
         }
         if (newTile.tile.GetComponent<TileInfo>().westTile != null )
         {
-            GameObject nextTile = newTile.tile.GetComponent<TileInfo>().westTile;
-            Node adjacentNode = graphNodes.Find(x => x.tile == nextTile);
-            int adjacencyWeight = nextTile.GetComponent<TileInfo>().movementCost;
-            if (adjacentNode != null && adjacentNode.colorType == COLOR_TYPE.ATTACK)
-            {
-                graphNodes.Remove(adjacentNode);
-                adjacentNode = null;
-            }
-            if (adjacentNode == null)
-            {
-                if (adjacencyWeight <= moveableDistance)
-                {
-                    adjacentNode = AddNode(nextTile, moveableDistance - adjacencyWeight, minRange, maxRange);
-                }
-                else
-                {
-                    adjacentNode = AddRangeColorNode(nextTile, minRange, maxRange, 1, COLOR_TYPE.ATTACK);
-                    adjacencyWeight = 1;
-                }
-            }
-            
+            //GameObject nextTile = newTile.tile.GetComponent<TileInfo>().westTile;
+            //Node adjacentNode = graphNodes.Find(x => x.tile == nextTile);
+            //int adjacencyWeight = nextTile.GetComponent<TileInfo>().movementCost;
+            //if (adjacentNode != null && adjacentNode.colorType == COLOR_TYPE.ATTACK)
+            //{
+            //    graphNodes.Remove(adjacentNode);
+            //    adjacentNode = null;
+            //}
+            //if (adjacentNode == null)
+            //{
+            //    if (adjacencyWeight <= moveableDistance)
+            //    {
+            //        adjacentNode = AddNode(nextTile, moveableDistance - adjacencyWeight, minRange, maxRange);
+            //    }
+            //    else
+            //    {
+            //        adjacentNode = AddRangeColorNode(nextTile, minRange, maxRange, 1, COLOR_TYPE.ATTACK);
+            //        adjacencyWeight = 1;
+            //    }
+            //}
+
+            Node adjacentNode = EvaluateNextTile(newTile.tile.westTile.GetComponent<TileInfo>(), moveableDistance, minRange, maxRange);
+
             if (adjacentNode != null)
-                AddEdge(newTile.nodeIndex, adjacentNode.nodeIndex, adjacencyWeight);
+                AddEdge(newTile.nodeIndex, adjacentNode.nodeIndex, adjacentNode.tile.movementCost);
 
         }
         if (newTile.tile.GetComponent<TileInfo>().northTile != null)
         {
-            GameObject nextTile = newTile.tile.GetComponent<TileInfo>().northTile;
-            Node adjacentNode = graphNodes.Find(x => x.tile == nextTile);
-            int adjacencyWeight = nextTile.GetComponent<TileInfo>().movementCost;
-            if (adjacentNode != null && adjacentNode.colorType == COLOR_TYPE.ATTACK)
-            {
-                graphNodes.Remove(adjacentNode);
-                adjacentNode = null;
-            }
-            if (adjacentNode == null)
-            {
-                if (adjacencyWeight <= moveableDistance)
-                {
-                    adjacentNode = AddNode(nextTile, moveableDistance - adjacencyWeight, minRange, maxRange);
-                }
-                else
-                {
-                    adjacentNode = AddRangeColorNode(nextTile, minRange, maxRange, 1, COLOR_TYPE.ATTACK);
-                    adjacencyWeight = 1;
-                }
-            }
+            //GameObject nextTile = newTile.tile.GetComponent<TileInfo>().northTile;
+            //Node adjacentNode = graphNodes.Find(x => x.tile == nextTile);
+            //int adjacencyWeight = nextTile.GetComponent<TileInfo>().movementCost;
+            //if (adjacentNode != null && adjacentNode.colorType == COLOR_TYPE.ATTACK)
+            //{
+            //    graphNodes.Remove(adjacentNode);
+            //    adjacentNode = null;
+            //}
+            //if (adjacentNode == null)
+            //{
+            //    if (adjacencyWeight <= moveableDistance)
+            //    {
+            //        adjacentNode = AddNode(nextTile, moveableDistance - adjacencyWeight, minRange, maxRange);
+            //    }
+            //    else
+            //    {
+            //        adjacentNode = AddRangeColorNode(nextTile, minRange, maxRange, 1, COLOR_TYPE.ATTACK);
+            //        adjacencyWeight = 1;
+            //    }
+            //}
+            Node adjacentNode = EvaluateNextTile(newTile.tile.northTile.GetComponent<TileInfo>(), moveableDistance, minRange, maxRange);
+
             if (adjacentNode != null)
-                AddEdge(newTile.nodeIndex, adjacentNode.nodeIndex, adjacencyWeight);
+                AddEdge(newTile.nodeIndex, adjacentNode.nodeIndex, adjacentNode.tile.movementCost);
 
         }
         if (newTile.tile.GetComponent<TileInfo>().southTile != null)
         {
-            GameObject nextTile = newTile.tile.GetComponent<TileInfo>().southTile;
-            Node adjacentNode = graphNodes.Find(x => x.tile == nextTile);
-            int adjacencyWeight = nextTile.GetComponent<TileInfo>().movementCost;
-            if (adjacentNode != null && adjacentNode.colorType == COLOR_TYPE.ATTACK)
-            {
-                graphNodes.Remove(adjacentNode);
-                adjacentNode = null;
-            }
-            if (adjacentNode == null || adjacentNode.colorType == COLOR_TYPE.ATTACK)
-            {
-                if (adjacencyWeight <= moveableDistance)
-                {
-                    adjacentNode = AddNode(nextTile, moveableDistance - adjacencyWeight, minRange, maxRange);
-                }
-                else
-                {
-                    adjacentNode = AddRangeColorNode(nextTile, minRange, maxRange, 1, COLOR_TYPE.ATTACK);
-                    adjacencyWeight = 1;
-                }
-            }
+            //GameObject nextTile = newTile.tile.GetComponent<TileInfo>().southTile;
+            //Node adjacentNode = graphNodes.Find(x => x.tile == nextTile);
+            //int adjacencyWeight = nextTile.GetComponent<TileInfo>().movementCost;
+            //if (adjacentNode != null && adjacentNode.colorType == COLOR_TYPE.ATTACK)
+            //{
+            //    graphNodes.Remove(adjacentNode);
+            //    adjacentNode = null;
+            //}
+            //if (adjacentNode == null || adjacentNode.colorType == COLOR_TYPE.ATTACK)
+            //{
+            //    if (adjacencyWeight <= moveableDistance)
+            //    {
+            //        adjacentNode = AddNode(nextTile, moveableDistance - adjacencyWeight, minRange, maxRange);
+            //    }
+            //    else
+            //    {
+            //        adjacentNode = AddRangeColorNode(nextTile, minRange, maxRange, 1, COLOR_TYPE.ATTACK);
+            //        adjacencyWeight = 1;
+            //    }
+            //}
+            Node adjacentNode = EvaluateNextTile(newTile.tile.southTile.GetComponent<TileInfo>(), moveableDistance, minRange, maxRange);
             if (adjacentNode != null)
-                AddEdge(newTile.nodeIndex, adjacentNode.nodeIndex, adjacencyWeight);
+                AddEdge(newTile.nodeIndex, adjacentNode.nodeIndex, adjacentNode.tile.movementCost);
 
         }
 
         return newTile;
+    }
+
+    private Node EvaluateNextTile(TileInfo nextTile, int moveableDistance, int minRange, int maxRange)
+    {
+        Node adjacentNode = graphNodes.Find(x => x.tile == nextTile);
+        int adjacencyWeight = nextTile.movementCost;
+        if (adjacentNode != null && adjacentNode.colorType == COLOR_TYPE.ATTACK)
+        {
+            graphNodes.Remove(adjacentNode);
+            adjacentNode = null;
+        }
+        if (adjacentNode == null)
+        {
+            if (adjacencyWeight <= moveableDistance)
+            {
+                adjacentNode = AddNode(nextTile, moveableDistance - adjacencyWeight, minRange, maxRange);
+            }
+            else if (moveableDistance < adjacencyWeight)
+            {
+                adjacentNode = AddRangeColorNode(nextTile.gameObject, minRange, maxRange, 1, COLOR_TYPE.ATTACK);
+                adjacencyWeight = 1;
+            }
+        }
+        return adjacentNode;
     }
 
     private void AddEdge(int vertexA, int vertexB, int distance)
@@ -175,7 +206,7 @@ public class Graph
 
     private Node AddRangeColorNode(GameObject thisTile, int minRange, int maxRange, int currentRange, COLOR_TYPE color)
     {
-        Node newTile = new Node(thisTile, currentNodeIndex);
+        Node newTile = new Node(thisTile.GetComponent<TileInfo>(), currentNodeIndex);
         newTile.MarkVisited();
         newTile.colorType = COLOR_TYPE.ATTACK;
         graphNodes.Add(newTile);
@@ -241,6 +272,9 @@ public class Graph
 
         Node currentNode = new Node(currentNodeBase.tile, currentNodeBase.nodeIndex);
 
+        subGraph.maxNodes = maxNodes;
+        subGraph.adjacencyMatrix = new int[maxNodes, maxNodes];
+
         for(int i = 0; i < maxNodes; i++)
         {
             visited[i] = false;
@@ -288,7 +322,7 @@ public class Graph
                         }
                         else if(distanceFromStart[v] <= moveableDistance)
                             nodeColor[v] = COLOR_TYPE.MOVEMENT;
-
+                        subGraph.adjacencyMatrix[currentIndex, v] = distanceFromStart[v];
                     }
 
                 }
@@ -300,6 +334,7 @@ public class Graph
         {
             node.colorType = nodeColor[node.nodeIndex];
         }
+
 
         return subGraph;
     }

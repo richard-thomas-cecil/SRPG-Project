@@ -64,14 +64,14 @@ public class CharacterInfo : MonoBehaviour
         return moveableTiles;
     }
 
-    public void MoveCharacter(GameObject newTile)
+    public void MoveCharacter(TileInfo newTile)
     {
 
         transform.position = newTile.transform.position;
 
         currentTile.SetUnoccupied();
 
-        currentTile = newTile.GetComponent<TileInfo>();
+        currentTile = newTile;
 
         moveableTiles.Clear();
 
@@ -79,7 +79,9 @@ public class CharacterInfo : MonoBehaviour
 
         moveableTiles = subGraph.graphNodes;
         GetTargetList();
-        currentTile.GetComponent<TileInfo>().SetOccupied(this);
+        currentTile.SetOccupied(this);
+
+        RunDijsktras();
     }
 
     public void IntializeCharacter(GameObject startTile)
@@ -111,7 +113,7 @@ public class CharacterInfo : MonoBehaviour
         //    Debug.Log(node.tile);
         //}
 
-        shortestPath = new Dijsktras(WorldStateInfo.Instance.mapTileGraph);
+        shortestPath = new Dijsktras(subGraph);
 
         transform.position = currentTile.transform.position;
         currentTile.GetComponent<TileInfo>().SetOccupied(this);
@@ -160,7 +162,8 @@ public class CharacterInfo : MonoBehaviour
 
     public void RunDijsktras()
     {
-        shortestPath.DijsktrasAlogrithm(currentTile.GetComponent<TileInfo>().index);
+        shortestPath.ReplaceGraph(subGraph);
+        shortestPath.DijsktrasAlogrithm(currentTile.index);
     }
     #region STAT_GETTERS
     public int GetMaxHP()
