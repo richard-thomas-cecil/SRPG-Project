@@ -38,6 +38,12 @@ public class Dijsktras
         return minIndex;
     }
 
+    public void ReplaceGraph(Graph newGraph)
+    {
+        _graph = newGraph;
+        graphSize = newGraph.graphNodes.Count;
+    }
+
     public void DijsktrasAlogrithm(int source)
     {
         dist = new int[graphSize];

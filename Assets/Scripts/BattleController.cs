@@ -145,10 +145,10 @@ public class BattleController : MonoBehaviour
             if (hit.collider != null)
             {
                 hit = Physics2D.Raycast(playerCursor.transform.position, new Vector2(1, 0), .1f, LayerMask.GetMask("Tile"));
-                Node moveableNode = selectedUnit.moveableTiles.Find(x => x.tile == hit.collider.gameObject);
+                Node moveableNode = selectedUnit.moveableTiles.Find(x => x.tile == hit.collider.gameObject.GetComponent<TileInfo>());
                 if (moveableNode.colorType == COLOR_TYPE.MOVEMENT)
                 {
-                    selectedUnit.MoveCharacter(hit.collider.gameObject);
+                    selectedUnit.MoveCharacter(moveableNode.tile);
                     Object.Destroy(GameObject.Find("CurrentSelectableTiles"));
 
                     selectedUnit.GetLocalTargets();
@@ -157,7 +157,7 @@ public class BattleController : MonoBehaviour
                 }
                 else if (moveableNode.colorType == COLOR_TYPE.ATTACK && hit.collider.GetComponentInParent<TileInfo>().isOccupied)
                 {
-                    int closestTile = FindClosestTile(hit.collider.gameObject);
+                    int closestTile = FindClosestTile(hit.collider.gameObject.GetComponent<TileInfo>());
                     selectedUnit.MoveCharacter(selectedUnit.moveableTiles.Find(x => x.nodeIndex == closestTile).tile);
 
                     Object.Destroy(GameObject.Find("CurrentSelectableTiles"));
@@ -169,7 +169,7 @@ public class BattleController : MonoBehaviour
 
     public void ColorTiles(List<Node> moveableTiles)
     {
-        List<GameObject> movementTiles = new List<GameObject>();
+        List<TileInfo> movementTiles = new List<TileInfo>();
 
         GameObject currentSelectableTiles = new GameObject("CurrentSelectableTiles");
         string objectName = "Selectable";
@@ -206,7 +206,7 @@ public class BattleController : MonoBehaviour
 
     private void ColorTilesEnemy(List<Node> moveableTiles)
     {
-        List<GameObject> movementTiles = new List<GameObject>();
+        List<TileInfo> movementTiles = new List<TileInfo>();
 
         GameObject currentSelectableTiles = new GameObject("CurrentSelectableTiles");
         string objectName = "Selectable";
@@ -243,7 +243,7 @@ public class BattleController : MonoBehaviour
         return rangeTiles;
     }
 
-    private int FindClosestTile(GameObject target)
+    private int FindClosestTile(TileInfo target)
     {
         List<Node> graph = selectedUnit.GetGraph();
         COLOR_TYPE currentTileColor;
