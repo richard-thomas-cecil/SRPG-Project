@@ -15,12 +15,15 @@ public class WorldStateInfo : MonoBehaviour
     public BasicMapInfo currentMapInfo;             //Map Data. All objects should pull map information they need from here
 
     public Graph mapTileGraph;                      //Main graph that all objects should reference for any graph related needs, including the building of subgraphs
+    public Dijsktras dijsktrasFullMap;
 
     public BattleController battleController;       //Battle controller. BattleController script should be attached to same object as this script.
 
     public GameObject actionMenu;                   //Probably going to remove this
 
     public List<GameObject> UI_Prefabs;             //TBD
+
+    private Random.State currentSeed;
 
     void Awake()
     {
@@ -41,6 +44,7 @@ public class WorldStateInfo : MonoBehaviour
         //BuildGraph from current mapInfo
         mapTileGraph = new Graph();
         mapTileGraph.BuildGraph(currentMapInfo.startingPositions[0]);
+        dijsktrasFullMap = new Dijsktras(mapTileGraph);
         actionMenu = GameObject.Find("ActionMenu");
     }
 
@@ -61,5 +65,12 @@ public class WorldStateInfo : MonoBehaviour
     public BattleState GetBattleState()
     {
         return battleController.battleState;
+    }
+
+    public int GetNextRandomNumber()
+    {
+        int nextRand = UnityEngine.Random.Range(0, 100);
+        currentSeed = UnityEngine.Random.state;
+        return nextRand;
     }
 }

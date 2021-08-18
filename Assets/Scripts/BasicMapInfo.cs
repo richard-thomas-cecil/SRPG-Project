@@ -26,11 +26,7 @@ public class BasicMapInfo : MonoBehaviour
 
     public void IntializeMap()
     {
-        foreach (var enemy in enemies)
-        {
-            enemy.IntializeCharacter(enemyPositions[enemies.IndexOf(enemy)]);
-            enemy.RunDijsktras();
-        }
+        
 
         mapGraph = WorldStateInfo.Instance.mapTileGraph;
 
@@ -40,11 +36,27 @@ public class BasicMapInfo : MonoBehaviour
             node.tile.name = "Tile " + node.nodeIndex;
         }
 
+        foreach (var enemy in enemies)
+        {
+            enemy.IntializeCharacter(enemyPositions[enemies.IndexOf(enemy)]);
+            //enemy.RunDijsktras();
+        }
+
         foreach (var pc in playerTeam)
         {
 
             pc.IntializeCharacter(startingPositions[playerTeam.IndexOf(pc)]);
-            pc.RunDijsktras();
+            //pc.RunDijsktras();
+        }
+
+        foreach(var enemy in enemies)
+        {
+            enemy.SetNewTile(enemy.currentTile);
+        }
+
+        foreach (var pc in playerTeam)
+        {
+            pc.SetNewTile(pc.currentTile);
         }
 
         //InitializeTargets();

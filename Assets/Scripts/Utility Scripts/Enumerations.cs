@@ -8,7 +8,13 @@ public enum ACTION_BUTTON_LIST
 {
     WAIT,
     INVENTORY,
-    ATTACK
+    ATTACK,
+    UNITS,
+    OBJECTIVE,
+    OPTIONS,
+    SUSPEND,
+    END_TURN,
+    ATTACK_AND_MOVE
 }
 
 //List of Damage Types for use in Damage calculations
@@ -37,12 +43,23 @@ public enum PHASE_LIST
 //Used in BattleStateMachine to keep track
 public enum BattleState
 {
+    START_STATE,
     SELECTING_UNIT,
     MOVE_UNIT,
+    POST_MOVEMENT,
     CHANGE_PHASE,
     SELECT_ACTION,
+    ATTACK_AND_MOVE,
     VIEWING_ENEMY,
-    WAIT
+    CHOOSE_ITEM,
+    CHOOSE_TARGET,
+    COUNTER_ATTACK,
+    SECOND_ATTACK,
+    POST_COMBAT,
+    CLEANUP,
+    ANIMATING,
+    WAIT,
+    DEFAULT
 }
 
 //Defines a characters "team"
@@ -51,4 +68,17 @@ public enum CHARACTER_TYPE
     PLAYER,
     ENEMY,
     OTHER
+}
+
+public enum ITEM_TYPE
+{
+    PASSIVE,
+    HEALING
+}
+
+public enum ENEMY_ACTIONS
+{
+    MOVE,
+    ATTACK,
+    WAIT
 }

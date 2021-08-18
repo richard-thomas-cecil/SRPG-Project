@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 8439117182383263378}
   - component: {fileID: 4576655300295217771}
   - component: {fileID: 12020330453372422}
+  - component: {fileID: 5399466964813607955}
   m_Layer: 12
   m_Name: TestCharacter
   m_TagString: Untagged
@@ -94,14 +95,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64b476965cb41d442a5f4c2f236ee023, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  characterData: {fileID: 11400000, guid: 99744b12febc2d04c9e5e7aed2d8e63c, type: 2}
+  characterData: {fileID: 0}
   currentTile: {fileID: 0}
   weaponList:
   - {fileID: 11400000, guid: f37c961c8f832ff4682cf1453c5a8b00, type: 2}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  itemList:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   targetList: []
+  localTargets: []
+  enemyAI: {fileID: 0}
+  flagIsDead: 0
+  bc2D: {fileID: 0}
+  renderer: {fileID: 0}
+  transform: {fileID: 0}
+  minRange: 0
+  maxRange: 0
 --- !u!61 &12020330453372422
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -128,3 +142,24 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!50 &5399466964813607955
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7858858909363244926}
+  m_BodyType: 1
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0

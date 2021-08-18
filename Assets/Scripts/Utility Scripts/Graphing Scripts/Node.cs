@@ -2,6 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//The "Color" of a tile corresponds to:
+//MOVMENT: Can the unit move onto this space?
+//ATTACK: Is this in attack range of the unit
+//Support: Is this in the range of a units support skills?
+//NONE: Not in any range of unit
 public enum COLOR_TYPE
 {
     MOVEMENT,
@@ -12,10 +17,10 @@ public enum COLOR_TYPE
 public class Node
 {
     public TileInfo tile;
-    public List<GameObject> tilesInRange;     //Tiles in attack range of this tile
     public COLOR_TYPE colorType;
     public bool visited;
     public int nodeIndex;
+    public int weight;
 
     public Node(TileInfo thisTile, int thisIndex)
     {
@@ -29,8 +34,4 @@ public class Node
         visited = true;
     }
 
-    public void AddRangeTile(GameObject tileToAdd)
-    {
-        tilesInRange.Add(tileToAdd);
-    }
 }

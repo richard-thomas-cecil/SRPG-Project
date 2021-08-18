@@ -24,11 +24,16 @@ public class CharacterInfo : MonoBehaviour
     public TileInfo currentTile;
 
     public WeaponData[] weaponList = new WeaponData[4];
+    public ItemData[] itemList = new ItemData[4];
 
-    public List<Target_Struct> targetList;
-    public List<Target_Struct> localTargets;
+    public List<CharacterInfo> targetList;
+    public List<CharacterInfo> localTargets;
 
     public Dijsktras shortestPath;
+
+    public StandardAI enemyAI;
+
+    public bool flagIsDead;
 
     //Component References
     [HideInInspector]
@@ -39,18 +44,24 @@ public class CharacterInfo : MonoBehaviour
     new public Transform transform;
 
 
-    private int minRange;
-    private int maxRange;
+    [SerializeField]private int minRange;
+    [SerializeField]private int maxRange;
+
+    private Rigidbody2D rigidbody2D;
 
     // Start is called before the first frame update
     void Start()
     {
-        targetList = new List<Target_Struct>();
-        localTargets = new List<Target_Struct>();
+        targetList = new List<CharacterInfo>();
+        localTargets = new List<CharacterInfo>();
+        flagIsDead = false;
+        rigidbody2D = GetComponent<Rigidbody2D>();
 
         bc2D = GetComponent<BoxCollider2D>();
         renderer = GetComponent<SpriteRenderer>();
         transform = GetComponent<Transform>();
+
+        InitializeCharacterData();
     }
 
     // Update is called once per frame
@@ -64,22 +75,36 @@ public class CharacterInfo : MonoBehaviour
         return moveableTiles;
     }
 
+    private void InitializeCharacterData()
+    {
+        characterData.HP_CURRENT = characterData.HP;
+        characterData.HIT = characterData.baseHit + (characterData.AIM * 2);
+        characterData.DODGE = characterData.baseDodge + (characterData.SPEED * 2);
+    }
+
     public void MoveCharacter(TileInfo newTile)
     {
 
         transform.position = newTile.transform.position;
 
+        
+    }
+
+    public void SetNewTile(TileInfo newTile)
+    {
         currentTile.SetUnoccupied();
 
         currentTile = newTile;
 
         moveableTiles.Clear();
 
-        subGraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(currentTile.index, characterData.MOVE, minRange, maxRange);
+        currentTile.SetOccupied(this);
 
+        subGraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(currentTile.index, characterData.MOVE, minRange, maxRange, this);
+        
         moveableTiles = subGraph.graphNodes;
         GetTargetList();
-        currentTile.SetOccupied(this);
+        
 
         RunDijsktras();
     }
@@ -100,12 +125,12 @@ public class CharacterInfo : MonoBehaviour
         }
 
 
-        subGraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(currentTile.index, characterData.MOVE, minRange, maxRange);
+        //subGraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(currentTile.index, characterData.MOVE, minRange, maxRange);
 
-        moveableTiles = subGraph.graphNodes;
+        //moveableTiles = subGraph.graphNodes;
         //moveableTiles.BuildGraph(currentTile, characterData.MOVE, minRange, maxRange);
 
-        
+        moveableTiles = new List<Node>();
 
         //Debug.Log("SubGraph for " + this.gameObject);
         //foreach(var node in subGraph)
@@ -128,7 +153,7 @@ public class CharacterInfo : MonoBehaviour
             if(hit.collider != null && hit.collider.gameObject != this.gameObject)
             {
                 Target_Struct newTarget = new Target_Struct(hit.collider.gameObject, CHARACTER_TYPE.ENEMY);
-                targetList.Add(newTarget);
+                targetList.Add(hit.collider.gameObject.GetComponent<CharacterInfo>());
             }
         }
     }
@@ -136,17 +161,30 @@ public class CharacterInfo : MonoBehaviour
     //Get nearby Targets post movement
     public void GetLocalTargets()
     {
-        Graph localTargetSubGraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(currentTile.GetComponent<TileInfo>().index, 0, minRange, maxRange);
-        Graph localSupportTargetSubGraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(currentTile.GetComponent<TileInfo>().index, 0, characterData.supportRangeMin, characterData.supportRangeMax);
+        Graph localTargetSubGraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(currentTile.GetComponent<TileInfo>().index, 0, minRange, maxRange, this);
+        Graph localSupportTargetSubGraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(currentTile.GetComponent<TileInfo>().index, 0, characterData.supportRangeMin, characterData.supportRangeMax, this);
         localTargets.Clear();
 
         foreach(var tile in localTargetSubGraph.graphNodes)
         {
             RaycastHit2D hit = Physics2D.Raycast(tile.tile.transform.position, new Vector2(0, 1), 0.1f, LayerMask.GetMask("CharacterLayer"));
-            if (hit.collider != null && hit.collider.gameObject != this.gameObject && hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType == CHARACTER_TYPE.ENEMY)
+            if (hit.collider != null && hit.collider.gameObject != this.gameObject)
             {
-                Target_Struct newTarget = new Target_Struct(hit.collider.gameObject, CHARACTER_TYPE.ENEMY);
-                localTargets.Add(newTarget);
+                switch (characterData.characterType)
+                {
+                    case CHARACTER_TYPE.PLAYER:
+                        if(hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType == CHARACTER_TYPE.ENEMY)
+                            localTargets.Add(hit.collider.gameObject.GetComponent<CharacterInfo>()); ;
+                        break;
+                    case CHARACTER_TYPE.ENEMY:
+                        if(hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType == CHARACTER_TYPE.PLAYER)
+                            localTargets.Add(hit.collider.gameObject.GetComponent<CharacterInfo>());
+                        break;
+                    case CHARACTER_TYPE.OTHER:
+                        if(hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType == CHARACTER_TYPE.ENEMY)
+                            localTargets.Add(hit.collider.gameObject.GetComponent<CharacterInfo>());
+                        break;
+                }
             }
         }
         foreach(var tile in localSupportTargetSubGraph.graphNodes)
@@ -154,17 +192,204 @@ public class CharacterInfo : MonoBehaviour
             RaycastHit2D hit = Physics2D.Raycast(tile.tile.transform.position, new Vector2(0, 1), 0.1f, LayerMask.GetMask("CharacterLayer"));
             if (hit.collider != null && hit.collider.gameObject != this.gameObject && hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType == CHARACTER_TYPE.PLAYER)
             {
-                Target_Struct newTarget = new Target_Struct(hit.collider.gameObject, CHARACTER_TYPE.PLAYER);
-                localTargets.Add(newTarget);
+                switch (characterData.characterType)
+                {
+                    case CHARACTER_TYPE.PLAYER:
+                        if (hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType != CHARACTER_TYPE.ENEMY)
+                            localTargets.Add(hit.collider.gameObject.GetComponent<CharacterInfo>()); ;
+                        break;
+                    case CHARACTER_TYPE.ENEMY:
+                        if (hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType == CHARACTER_TYPE.ENEMY)
+                            localTargets.Add(hit.collider.gameObject.GetComponent<CharacterInfo>());
+                        break;
+                    case CHARACTER_TYPE.OTHER:
+                        if (hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType != CHARACTER_TYPE.ENEMY)
+                            localTargets.Add(hit.collider.gameObject.GetComponent<CharacterInfo>());
+                        break;
+                }
             }
         }
+    }
+
+    public void GetLocalTargets(TileInfo newTile)
+    {
+        Graph localTargetSubGraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(newTile.index, 0, minRange, maxRange, this);
+        Graph localSupportTargetSubGraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(newTile.index, 0, characterData.supportRangeMin, characterData.supportRangeMax, this);
+        localTargets.Clear();
+
+        foreach (var tile in localTargetSubGraph.graphNodes)
+        {
+            RaycastHit2D hit = Physics2D.Raycast(tile.tile.transform.position, new Vector2(0, 1), 0.1f, LayerMask.GetMask("CharacterLayer"));
+            if (hit.collider != null && hit.collider.gameObject != this.gameObject)
+            {
+                switch (characterData.characterType)
+                {
+                    case CHARACTER_TYPE.PLAYER:
+                        if (hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType == CHARACTER_TYPE.ENEMY)
+                            localTargets.Add(hit.collider.gameObject.GetComponent<CharacterInfo>()); ;
+                        break;
+                    case CHARACTER_TYPE.ENEMY:
+                        if (hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType == CHARACTER_TYPE.PLAYER)
+                            localTargets.Add(hit.collider.gameObject.GetComponent<CharacterInfo>());
+                        break;
+                    case CHARACTER_TYPE.OTHER:
+                        if (hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType == CHARACTER_TYPE.ENEMY)
+                            localTargets.Add(hit.collider.gameObject.GetComponent<CharacterInfo>());
+                        break;
+                }
+            }
+        }
+        foreach (var tile in localSupportTargetSubGraph.graphNodes)
+        {
+            RaycastHit2D hit = Physics2D.Raycast(tile.tile.transform.position, new Vector2(0, 1), 0.1f, LayerMask.GetMask("CharacterLayer"));
+            if (hit.collider != null && hit.collider.gameObject != this.gameObject && hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType == CHARACTER_TYPE.PLAYER)
+            {
+                switch (characterData.characterType)
+                {
+                    case CHARACTER_TYPE.PLAYER:
+                        if (hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType != CHARACTER_TYPE.ENEMY)
+                            localTargets.Add(hit.collider.gameObject.GetComponent<CharacterInfo>()); ;
+                        break;
+                    case CHARACTER_TYPE.ENEMY:
+                        if (hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType == CHARACTER_TYPE.ENEMY)
+                            localTargets.Add(hit.collider.gameObject.GetComponent<CharacterInfo>());
+                        break;
+                    case CHARACTER_TYPE.OTHER:
+                        if (hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType != CHARACTER_TYPE.ENEMY)
+                            localTargets.Add(hit.collider.gameObject.GetComponent<CharacterInfo>());
+                        break;
+                }
+            }
+        }
+    }
+
+    public void GetLocalTargetsCurrentWeapon()
+    {
+        Graph localTargetSubGraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(currentTile.GetComponent<TileInfo>().index, 0, weaponList[0].MINRANGE, weaponList[0].MAXRANGE, this);
+        Graph localSupportTargetSubGraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(currentTile.GetComponent<TileInfo>().index, 0, characterData.supportRangeMin, characterData.supportRangeMax, this);
+        localTargets.Clear();
+
+        foreach (var tile in localTargetSubGraph.graphNodes)
+        {
+            RaycastHit2D hit = Physics2D.Raycast(tile.tile.transform.position, new Vector2(0, 1), 0.1f, LayerMask.GetMask("CharacterLayer"));
+            if (hit.collider != null && hit.collider.gameObject != this.gameObject)
+            {
+                switch (characterData.characterType)
+                {
+                    case CHARACTER_TYPE.PLAYER:
+                        if (hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType == CHARACTER_TYPE.ENEMY)
+                            localTargets.Add(hit.collider.gameObject.GetComponent<CharacterInfo>()); ;
+                        break;
+                    case CHARACTER_TYPE.ENEMY:
+                        if (hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType == CHARACTER_TYPE.PLAYER)
+                            localTargets.Add(hit.collider.gameObject.GetComponent<CharacterInfo>());
+                        break;
+                    case CHARACTER_TYPE.OTHER:
+                        if (hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType == CHARACTER_TYPE.ENEMY)
+                            localTargets.Add(hit.collider.gameObject.GetComponent<CharacterInfo>());
+                        break;
+                }
+            }
+        }
+        foreach (var tile in localSupportTargetSubGraph.graphNodes)
+        {
+            RaycastHit2D hit = Physics2D.Raycast(tile.tile.transform.position, new Vector2(0, 1), 0.1f, LayerMask.GetMask("CharacterLayer"));
+            if (hit.collider != null && hit.collider.gameObject != this.gameObject && hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType == CHARACTER_TYPE.PLAYER)
+            {
+                switch (characterData.characterType)
+                {
+                    case CHARACTER_TYPE.PLAYER:
+                        if (hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType != CHARACTER_TYPE.ENEMY)
+                            localTargets.Add(hit.collider.gameObject.GetComponent<CharacterInfo>()); ;
+                        break;
+                    case CHARACTER_TYPE.ENEMY:
+                        if (hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType == CHARACTER_TYPE.ENEMY)
+                            localTargets.Add(hit.collider.gameObject.GetComponent<CharacterInfo>());
+                        break;
+                    case CHARACTER_TYPE.OTHER:
+                        if (hit.collider.gameObject.GetComponent<CharacterInfo>().characterData.characterType != CHARACTER_TYPE.ENEMY)
+                            localTargets.Add(hit.collider.gameObject.GetComponent<CharacterInfo>());
+                        break;
+                }
+            }
+        }
+    }
+
+    public void RecolorGraph()
+    {
+        subGraph.RecolorGraph(GetMOVE(), minRange, maxRange, this);
+    }
+
+    public TileInfo FindBestTile(WeaponData chosenWeapon, CharacterInfo chosenTarget)
+    {
+        Dijsktras dijsktras = new Dijsktras(WorldStateInfo.Instance.mapTileGraph);
+        List<Node> tilesToEvaluate = new List<Node>();
+        Graph tilesInRange = new Graph();
+        int range = chosenWeapon.MAXRANGE;
+        tilesInRange = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(chosenTarget.currentTile.index, 0, chosenWeapon.MINRANGE, range, chosenTarget);
+
+        TileInfo chosenTile = null;
+
+        foreach (var tile in tilesInRange.graphNodes)
+        {
+            Node nextTile = subGraph.graphNodes.Find(x => x.tile == tile.tile);
+            
+            if (nextTile != null && nextTile.colorType == COLOR_TYPE.MOVEMENT)
+            {
+                nextTile.weight = tile.weight;
+                tilesToEvaluate.Add(nextTile);
+            }
+        }
+
+        while (chosenTile == null && tilesToEvaluate.Count > 0 && range >= chosenWeapon.MINRANGE)
+        {
+            chosenTile = EvaluateTileAtRange(range, tilesToEvaluate);
+            tilesToEvaluate.RemoveAll(x => x.weight == range);
+            range = range - 1;
+        }
+
+        return chosenTile;
+    }
+
+    private TileInfo EvaluateTileAtRange(int range, List<Node> tilesToEvaluate)
+    {
+        TileInfo chosenTile = null;
+        foreach (var tile in tilesToEvaluate)
+        {
+            if (tile.weight == range && (!tile.tile.isOccupied || tile.tile.occupant == this))
+            {
+                if (chosenTile == null || (shortestPath.dist[tile.tile.index] < shortestPath.dist[chosenTile.index]))
+                    chosenTile = tile.tile;
+            }
+        }
+        return chosenTile;
+    }
+
+    //Used to indicate if evaluationTarget is an enemy of this unit
+    public bool EvaluateIsEnemy(CharacterInfo evaluationTarget)
+    {
+        switch (characterData.characterType)
+        {
+            case CHARACTER_TYPE.PLAYER:
+                if (evaluationTarget.characterData.characterType == CHARACTER_TYPE.PLAYER || evaluationTarget.characterData.characterType == CHARACTER_TYPE.OTHER)
+                    return false;
+                break;
+            case CHARACTER_TYPE.ENEMY:
+                if (evaluationTarget.characterData.characterType != CHARACTER_TYPE.ENEMY)
+                    return false;
+                break;
+            default:
+                break;
+        }
+        return false;
     }
 
     public void RunDijsktras()
     {
         shortestPath.ReplaceGraph(subGraph);
-        shortestPath.DijsktrasAlogrithm(currentTile.index);
+        shortestPath.DijsktrasAlogrithm(currentTile.index, this);
     }
+
     #region STAT_GETTERS
     public int GetMaxHP()
     {
@@ -210,5 +435,34 @@ public class CharacterInfo : MonoBehaviour
     {
         return characterData.MOVE;
     }
+
+    public int GetMaxRange()
+    {
+        return maxRange;
+    }
+
+    public int GetMinRange()
+    {
+        return minRange;
+    }
     #endregion
+
+   public void ChangeWeapon(WeaponData weapon)
+    {
+        WeaponData tempWeapon = weaponList[0];
+        int weaponIndex = 0;
+        for(int i = 0; i < weaponList.Length; i++)
+        {
+            if (weaponList[i] == weapon)
+                weaponIndex = i;
+        }
+
+        weaponList[0] = weapon;
+        weaponList[weaponIndex] = tempWeapon;
+    }
+
+    public Rigidbody2D GetRigidbody2D()
+    {
+        return rigidbody2D;
+    }
 }

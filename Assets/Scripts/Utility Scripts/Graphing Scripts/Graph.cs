@@ -3,35 +3,37 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
+//Graph Class for use during battle. Used to find things in range of a unit, shortest paths, etc
 public class Graph
 {
-    private Queue<Node> queue = new Queue<Node>();
-    public List<Node> graphNodes = new List<Node>();
-    public List<GameObject> targetsInRange = new List<GameObject>();
-    private int maxNodes;
-    public Node startNode;
+    
+    public List<Node> graphNodes = new List<Node>();                    //The list of nodes that makeup the graph
+    private int maxNodes;                                               //Max number of nodes. Will be equal to the number of tiles on map
+    public Node startNode;                                              //Where to start building the graph from.
 
-    public int[,] adjacencyMatrix;
+    public int[,] adjacencyMatrix;                                      //Adjacency Matrix
 
-    private int currentNodeIndex = 0;
+    private int currentNodeIndex;                                   //Each node and tile will be assigned an index, starting from 0
 
     public Graph()
     {
     }
 
+    //Initialize and start building the graph
     public void BuildGraph(GameObject startingTile)
     {
-        maxNodes = GameObject.Find("MapInfo").GetComponentsInChildren<TileInfo>().Length;
+        maxNodes = GameObject.Find("MapInfo").GetComponentsInChildren<TileInfo>().Length;       //GetNumber of tiles on map
 
         adjacencyMatrix = new int[maxNodes, maxNodes];
-        graphNodes.Clear();
+        graphNodes.Clear();                                                                     //Clear out any nodes if they exsist
         currentNodeIndex = 0;
 
 
         startNode = AddNode(startingTile.GetComponent<TileInfo>(), 9999, 0, 0);
     }
 
-
+    //This method may not be used at any point anymore
     public void BuildGraph(GameObject startingTile, int moveableDistance, int minRange, int maxRange)
     {
         maxNodes = GameObject.Find("MapInfo").GetComponentsInChildren<TileInfo>().Length;
@@ -44,18 +46,21 @@ public class Graph
         startNode = AddNode(startingTile.GetComponent<TileInfo>(), moveableDistance, minRange, maxRange);
     }
 
+    //Method to add node. Is called recursively until all nodes are visited
     private Node AddNode(TileInfo thisTile, int moveableDistance, int minRange, int maxRange)
     {
+        //Creates a new node and marks it as visited, then adds it to the node list and increments the Node index
         Node newTile = new Node(thisTile, currentNodeIndex);
         newTile.MarkVisited();
-        newTile.colorType = COLOR_TYPE.MOVEMENT;
+        newTile.colorType = COLOR_TYPE.NONE;
         //AddRangeTiles(newTile, thisTile, minRange, maxRange, 0);
         graphNodes.Add(newTile);
 
         currentNodeIndex++;
 
         
-
+        //Next, check each neighboring tile to see if there is a tile to visit, then evaluate whether it needs to be added to the graph list.
+        //See EvaluateNextTile for more information
         if (newTile.tile.eastTile != null)
         {
             //    TileInfo nextTile = newTile.tile.eastTile.GetComponent<TileInfo>();
@@ -79,6 +84,7 @@ public class Graph
             //        }
             //    }
             Node adjacentNode = EvaluateNextTile(newTile.tile.eastTile.GetComponent<TileInfo>(), moveableDistance, minRange, maxRange);
+
 
             if (adjacentNode != null)
                 AddEdge(newTile.nodeIndex, adjacentNode.nodeIndex, adjacentNode.tile.movementCost);
@@ -172,15 +178,13 @@ public class Graph
         return newTile;
     }
 
+    //Evaluates a tile to see if it needs to be added to the node list. First, we check to see if the current tile is in the list of nodes already.
+    //Then, if it it is not, we call AddNode to add it to the list, and return it to our adjacent Node. Finally we return adjacentNode so it may be added to the adjacencyMatrix.
+    //If it the node is already in the graph, we simply return it so it may be added to the adjacency Matrix
     private Node EvaluateNextTile(TileInfo nextTile, int moveableDistance, int minRange, int maxRange)
     {
         Node adjacentNode = graphNodes.Find(x => x.tile == nextTile);
         int adjacencyWeight = nextTile.movementCost;
-        if (adjacentNode != null && adjacentNode.colorType == COLOR_TYPE.ATTACK)
-        {
-            graphNodes.Remove(adjacentNode);
-            adjacentNode = null;
-        }
         if (adjacentNode == null)
         {
             if (adjacencyWeight <= moveableDistance)
@@ -204,6 +208,7 @@ public class Graph
         }
     }
 
+    //No longer in use
     private Node AddRangeColorNode(GameObject thisTile, int minRange, int maxRange, int currentRange, COLOR_TYPE color)
     {
         Node newTile = new Node(thisTile.GetComponent<TileInfo>(), currentNodeIndex);
@@ -260,69 +265,127 @@ public class Graph
         return newTile;
     }
 
-    public Graph BuildSubGraph(int root, int moveableDistance, int minRange, int maxRange)
+    //Builds a subGraph based off of the adjacency matrix using Breadth-first search
+    public Graph BuildSubGraph(int root, int moveableDistance, int minRange, int maxRange, CharacterInfo currentCharacter)
     {
-        Graph subGraph = new Graph();
-        Queue<Node> queue = new Queue<Node>();
-        bool[] visited = new bool[maxNodes];
-        int[] distanceFromStart = new int[maxNodes];
-        COLOR_TYPE[] nodeColor = new COLOR_TYPE[maxNodes];
+        Graph subGraph = new Graph();                                                   //New graph object
+        Queue<Node> queue = new Queue<Node>();                                          //Queue for BFS
+        bool[] visited = new bool[maxNodes];                                            //Markvisited for BFS
+        int[] distanceFromStart = new int[maxNodes];                                    //Distance from start keeps track of how far a node is away from the start(ie. the current tile of the unit), so that we know when to stop searching
+        COLOR_TYPE[] nodeColor = new COLOR_TYPE[maxNodes];                              //Keeps track of how to color nodes based on distance from start
 
-        Node currentNodeBase = graphNodes.Find(x => x.nodeIndex == root);
+        bool[] markAsInRange = new bool[maxNodes];
 
-        Node currentNode = new Node(currentNodeBase.tile, currentNodeBase.nodeIndex);
+        Node currentNodeBase = graphNodes.Find(x => x.nodeIndex == root);               //Find the node in the main graph that corresponds with the root tileIndex, and set it as the first node
 
-        subGraph.maxNodes = maxNodes;
+        Node currentNode;                                                               //Designates the current Node being evaluated to add to subgraph                  
+
+        //Set max nodes and intialize adjacency matrix for subgraph
+        subGraph.maxNodes = maxNodes;                                                   
         subGraph.adjacencyMatrix = new int[maxNodes, maxNodes];
 
+        //Initialize various arrays
         for(int i = 0; i < maxNodes; i++)
         {
             visited[i] = false;
             nodeColor[i] = COLOR_TYPE.NONE;
-            distanceFromStart[i] = 0;
+            distanceFromStart[i] = -1;
         }
 
-        queue.Enqueue(currentNode);
+        //Queue up the root node, then set it to visited with a distance of 0
+        queue.Enqueue(currentNodeBase);
         visited[root] = true;
         distanceFromStart[root] = 0;
+        nodeColor[root] = COLOR_TYPE.MOVEMENT;
 
+        //While loop for BFS
         while(queue.Count > 0){
-            currentNodeBase = queue.Dequeue();
+            currentNodeBase = queue.Dequeue();                                  //Dequeue to get the next node to evaluate (Note: redundant for first loop)
 
-            int currentIndex = currentNodeBase.nodeIndex;
+            int currentIndex = currentNodeBase.nodeIndex;                       //Get the index for the x value in AdjacencyMatrix[x,y]
 
-            currentNode = new Node(currentNodeBase.tile, currentIndex);
+            currentNode = new Node(currentNodeBase.tile, currentIndex);         //Create a new node using information from currentNodeBase
 
+
+            //If the current Index has not previously been determined to be outside of the characters range (defined by moveableDistance + maxRange), then
+            //proceed to evaluate its neighboring nodes, add them to the queue if needed, and finally add it to the subgraph
             if (distanceFromStart[currentIndex] <= moveableDistance + maxRange)
             {
                 for (int v = 0; v < maxNodes; v++)
                 {
                     if (adjacencyMatrix[currentIndex, v] != 0)
                     {
+                        subGraph.adjacencyMatrix[currentIndex, v] = adjacencyMatrix[currentIndex, v];
+                        //If tile of index v has not previously been visited, add it to the queue
                         if (!visited[v])
                             queue.Enqueue(graphNodes.Find(x => x.nodeIndex == v));
                         visited[v] = true;
-                        distanceFromStart[v] = FindMinDistance(distanceFromStart[v], distanceFromStart[currentIndex] + adjacencyMatrix[currentIndex, v]);
-                        if (distanceFromStart[v] > moveableDistance)
+
+                        TileInfo tileV = graphNodes.Find(x => x.nodeIndex == v).tile;
+
+                        if (currentIndex == 12 && v == 11)
                         {
-                            if (distanceFromStart[currentIndex] <= moveableDistance)
-                            {
-                                distanceFromStart[v] = FindMinDistance(distanceFromStart[v], moveableDistance + 1);
-                            }
-                            else if (distanceFromStart[currentIndex] > moveableDistance)
-                            {
-                                distanceFromStart[v] = FindMinDistance(distanceFromStart[v], distanceFromStart[currentIndex] + 1);
-                            }
-                            
+                            Debug.Log("");
+                        }
+
+                        //Due to priority of Node colors, we need to check and see if the current distance of tile of index v is greater than the current node + its distance to the next node
+
+                        distanceFromStart[v] = FindMinDistance(distanceFromStart[v], distanceFromStart[currentIndex] + adjacencyMatrix[currentIndex, v]);
+
+
+                        if (tileV.occupant != null && nodeColor[v] == COLOR_TYPE.MOVEMENT && EvaluateIsEnemy(currentCharacter, tileV.occupant))
+                        {
+                            distanceFromStart[v] = moveableDistance + 1;
+                        }
+
+                        int addRange = 0;
+
+                        if (graphNodes[currentIndex].tile.isOccupied && currentIndex !=root && !currentCharacter.EvaluateIsEnemy(graphNodes[currentIndex].tile.occupant) && distanceFromStart[currentIndex] <= moveableDistance && nodeColor[v] == COLOR_TYPE.NONE)
+                        {
+                            addRange = 1;
                         }
                         
-                        if (distanceFromStart[v] >= minRange + moveableDistance && distanceFromStart[v] <= maxRange + moveableDistance && nodeColor[v] != COLOR_TYPE.MOVEMENT)
+                        //If the tile of index v is evaluated as farther from the root than the unit can move, we need to then check to see if it is within the units max range
+                        //by finding the minimum distance between itself and either 1 away from the max moveable distance if the currentNode has a distance <= the movement of the unit,
+                        //or one tile further from the current Index if the current Node is farther away from the moveable distance.
+                        //This ensures that all tiles are properly evaluated as being in or out of units range
+                        if (distanceFromStart[v]> moveableDistance + addRange && distanceFromStart[currentIndex] + addRange < moveableDistance + maxRange && !tileV.isOccupied /*&& (!graphNodes[currentIndex].tile.isOccupied || currentIndex == root)*/)
+                        {
+                            if (distanceFromStart[v] <= moveableDistance)
+                            {
+                                nodeColor[v] = COLOR_TYPE.MOVEMENT;
+                            }
+                            if (distanceFromStart[currentIndex] + addRange <= moveableDistance)
+                            {
+                                distanceFromStart[v] = FindMinDistanceInRange(distanceFromStart[v] + addRange, moveableDistance + 1 + addRange, moveableDistance + minRange, moveableDistance + maxRange);
+                                if (distanceFromStart[v] <= moveableDistance + maxRange && (nodeColor[currentIndex] == COLOR_TYPE.MOVEMENT || markAsInRange[currentIndex]))
+                                    markAsInRange[v] = true;
+                            }
+                            else if (distanceFromStart[currentIndex] + addRange > moveableDistance)
+                            {
+                                distanceFromStart[v] = FindMinDistanceInRange(distanceFromStart[v] + addRange, distanceFromStart[currentIndex] + 1 + addRange, moveableDistance + minRange, moveableDistance + maxRange);
+                                if(distanceFromStart[v] <= moveableDistance + maxRange && (nodeColor[currentIndex] == COLOR_TYPE.MOVEMENT || markAsInRange[currentIndex]))
+                                    markAsInRange[v] = true;
+                            }
+
+                            
+                        }
+
+
+                        //Check to see if a node is in range of another node and color it as attack
+
+                        if (markAsInRange[v] && nodeColor[v] != COLOR_TYPE.MOVEMENT)
                         {
                             nodeColor[v] = COLOR_TYPE.ATTACK;
                         }
-                        else if(distanceFromStart[v] <= moveableDistance)
+
+                        //If tile is in moveable range, color it as movement. Movement color overrides attack color                   
+                        if (distanceFromStart[v] <= moveableDistance)
+                        {
                             nodeColor[v] = COLOR_TYPE.MOVEMENT;
-                        subGraph.adjacencyMatrix[currentIndex, v] = distanceFromStart[v];
+                            
+                        }
+                        
                     }
 
                 }
@@ -330,9 +393,11 @@ public class Graph
             }
             
         }
+        //Correct color for each node
         foreach(var node in subGraph.graphNodes)
         {
             node.colorType = nodeColor[node.nodeIndex];
+            node.weight = distanceFromStart[node.nodeIndex];
         }
 
 
@@ -342,13 +407,80 @@ public class Graph
     private int FindMinDistance(int currentDistance, int nextDistance)
     {
         int minDistance = currentDistance;
-        if(minDistance == 0 || minDistance >= nextDistance)
+        if(minDistance == -1 || minDistance >= nextDistance)
         {
             minDistance = nextDistance;
         }
 
         return minDistance;
     }
+
+    private int FindMinDistanceInRange(int currentDistance, int nextDistance, int minRange, int maxRange)
+    {
+        int minDistance = currentDistance;
+        if(((minDistance == -1 || minDistance >= nextDistance) && (nextDistance >= minRange) || minDistance < minRange))
+        {
+            minDistance = nextDistance;
+        }
+
+        return minDistance;
+    }    
+
+    public void RecolorGraph(int moveableDistance, int minRange, int maxRange, CharacterInfo currentCharacter)
+    {
+        bool[] markAsInRange = new bool[maxNodes];
+
+        for(int i = 0; i < maxNodes; i++)
+        {
+            markAsInRange[i] = false;
+        }
+
+        foreach(var node in graphNodes)
+        {
+                for (int v = 0; v < graphNodes.Count; v++)
+                {
+                if (graphNodes[v].nodeIndex == 5)
+                    Debug.Log(node.nodeIndex + " ");
+                if ((graphNodes[v].weight > moveableDistance) && adjacencyMatrix[node.nodeIndex, graphNodes[v].nodeIndex] != 0 && (node.colorType == COLOR_TYPE.MOVEMENT || markAsInRange[graphNodes[v].nodeIndex]) && (!node.tile.isOccupied || node.tile.occupant == currentCharacter))
+                    {
+                        
+                        markAsInRange[graphNodes[v].nodeIndex] = true;
+                    }
+                }
+        }
+
+        for(int i = 0; i < graphNodes.Count; i++)
+        {
+            if (markAsInRange[graphNodes[i].nodeIndex])
+                graphNodes[i].colorType = COLOR_TYPE.ATTACK;
+            else if (graphNodes[i].weight <= moveableDistance)
+                graphNodes[i].colorType = COLOR_TYPE.MOVEMENT;
+            else
+                graphNodes[i].colorType = COLOR_TYPE.NONE;
+        }
+
+    }
+
+    //Returns true if toEvaluate is considered an "enemy" of thisCharacter
+    private bool EvaluateIsEnemy(CharacterInfo thisCharacter, CharacterInfo toEvaluate)
+    {
+        switch (thisCharacter.characterData.characterType)
+        {
+            case CHARACTER_TYPE.PLAYER:
+                if (toEvaluate.characterData.characterType == CHARACTER_TYPE.PLAYER)
+                    return false;
+                else
+                    return true;
+            case CHARACTER_TYPE.ENEMY:
+                if (toEvaluate.characterData.characterType == CHARACTER_TYPE.ENEMY)
+                    return false;
+                else
+                    return true;
+            default:
+                return true;
+        }
+    }
+
     public void Display()
     {
         Debug.Log("***********Adjacency Matrix Representation***********");

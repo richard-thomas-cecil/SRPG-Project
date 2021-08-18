@@ -7,7 +7,7 @@ public class TileInfo : MonoBehaviour
     public string tileName;
     public int movementCost;
     public int defBoost;
-    public int hitBoost;
+    public int dodgeBoost;
 
     public bool isOccupied;
     public CharacterInfo occupant;
@@ -42,20 +42,21 @@ public class TileInfo : MonoBehaviour
     {
         RaycastHit2D[] cast = new RaycastHit2D[1];
         
-        if(bc2D.Raycast(new Vector2(1, 0), cast, 1f) != 0)
+        if(bc2D.Raycast(new Vector2(1, 0), cast, 1f, LayerMask.GetMask("Tile")) != 0)
             eastTile = cast[0].collider.gameObject;
 
         
-        if(bc2D.Raycast(new Vector2(-1, 0), cast, 1f) != 0)
+        if(bc2D.Raycast(new Vector2(-1, 0), cast, 1f, LayerMask.GetMask("Tile")) != 0)
             westTile = cast[0].collider.gameObject;
 
-        if(bc2D.Raycast(new Vector2(0, 1), cast, 1f) != 0)
+        if(bc2D.Raycast(new Vector2(0, 1), cast, 1f, LayerMask.GetMask("Tile")) != 0)
             northTile = cast[0].collider.gameObject;
 
-        if(bc2D.Raycast(new Vector2(0, -1), cast, 1f) != 0)
+        if(bc2D.Raycast(new Vector2(0, -1), cast, 1f, LayerMask.GetMask("Tile")) != 0)
             southTile = cast[0].collider.gameObject;
     }
 
+    //When called, returns the appropriate tile
     public GameObject GetAdjacentTile(Vector2 direction)
     {
         if (direction == Vector2.right)

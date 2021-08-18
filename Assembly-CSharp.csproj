@@ -65,16 +65,22 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\BasicMapInfo.cs" />
+    <Compile Include="Assets\Scripts\BattleAnimationController.cs" />
     <Compile Include="Assets\Scripts\BattleController.cs" />
     <Compile Include="Assets\Scripts\BuildGrid.cs" />
     <Compile Include="Assets\Scripts\Character Scripts\CharacterInfo.cs" />
+    <Compile Include="Assets\Scripts\Character Scripts\EnemyAI Scripts\StandardAI.cs" />
+    <Compile Include="Assets\Scripts\Data\Character Data\NewBehaviourScript.cs" />
     <Compile Include="Assets\Scripts\PlayerController.cs" />
     <Compile Include="Assets\Scripts\PlayerControls.cs" />
     <Compile Include="Assets\Scripts\ScriptableObjects\CharacterData.cs" />
+    <Compile Include="Assets\Scripts\ScriptableObjects\ItemData.cs" />
     <Compile Include="Assets\Scripts\ScriptableObjects\WeaponData.cs" />
     <Compile Include="Assets\Scripts\TileInfo.cs" />
     <Compile Include="Assets\Scripts\UI Scripts\ActionsMenuController.cs" />
     <Compile Include="Assets\Scripts\UI Scripts\ButtonInfo.cs" />
+    <Compile Include="Assets\Scripts\UI Scripts\TargetButtonInfo.cs" />
+    <Compile Include="Assets\Scripts\Utility Scripts\CreateTiles.cs" />
     <Compile Include="Assets\Scripts\Utility Scripts\Enumerations.cs" />
     <Compile Include="Assets\Scripts\Utility Scripts\Graphing Scripts\Dijsktras.cs" />
     <Compile Include="Assets\Scripts\Utility Scripts\Graphing Scripts\Graph.cs" />
