@@ -10,18 +10,26 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 816de8faf53205f4d9e96b19766df042, type: 3}
-  m_Name: TestMan
+  m_Name: Test1
   m_EditorClassIdentifier: 
   characterType: 0
-  CharacterName: 
-  HP: 0
-  HP_CURRENT: 0
-  PHY: 0
-  PREC: 0
-  AIM: 0
-  ARMOR: 0
-  SHIELD: 0
-  SPEED: 0
+  CharacterName: Test 1
+  HP: 10
+  HP_CURRENT: 10
+  PHY: 6
+  PREC: 3
+  AIM: 9
+  ARMOR: 4
+  SHIELD: 2
+  SPEED: 7
   MOVE: 2
-  minRange: 1
-  maxRange: 2
+  baseHit: 0
+  baseDodge: 0
+  baseCrit: 0
+  HIT: 18
+  DODGE: 14
+  CRIT: 0
+  minRange: 0
+  maxRange: 0
+  supportRangeMin: 0
+  supportRangeMax: 0
