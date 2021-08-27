@@ -16,6 +16,9 @@ public class ActionsMenuController : MonoBehaviour
     public GameObject itemActionPanel;
     public ButtonInfo[] buttons;
 
+    public Button confirmButton;
+    public Button backButton;
+
     public List<CharacterInfo> targetList;
 
     public List<ACTION_BUTTON_LIST> currentActionList;      //Keeps track of current actions in the menu so they may be removed later
@@ -27,6 +30,7 @@ public class ActionsMenuController : MonoBehaviour
 
     [SerializeField]private GameObject itemButtonPrefab;
     [SerializeField]private GameObject targetButtonPrefab;
+    [SerializeField]private GameObject weaponButtonPrefab;
 
     // Start is called before the first frame update
     void Start()
@@ -111,11 +115,15 @@ public class ActionsMenuController : MonoBehaviour
                 case ACTION_BUTTON_LIST.SUSPEND:
                     break;
                 case ACTION_BUTTON_LIST.END_TURN:
+                    button.button.onClick.AddListener(WorldStateInfo.Instance.battleController.EndTurnAction);
                     break;
             }
         }
 
-        itemActionPanel.transform.Find("BackButton").gameObject.GetComponent<Button>().onClick.AddListener(ReverseMenu);
+        backButton = itemActionPanel.transform.Find("BackButton").gameObject.GetComponent<Button>();
+        backButton.onClick.AddListener(ReverseMenu);
+        confirmButton = itemActionPanel.transform.Find("ConfirmButton").GetComponent<Button>();
+        confirmButton.gameObject.SetActive(false);
     }
 
     //Create the Action menu by passing in a list of Action IDs from Battle Controller
@@ -143,6 +151,7 @@ public class ActionsMenuController : MonoBehaviour
         ResetActionMenu();
         ResetMenuPanel(itemPanel);
         ResetMenuPanel(targetPanel);
+        confirmButton.gameObject.SetActive(false);
         ResetMenuPanel(itemActionPanel);
     }
 
@@ -172,7 +181,7 @@ public class ActionsMenuController : MonoBehaviour
     {
         for (int i = 0; i < panel.transform.childCount; i++)
         {
-            if(!(panel == itemActionPanel && i == panel.transform.childCount -1))
+            if(!(panel == itemActionPanel && (panel.transform.GetChild(i).gameObject == confirmButton.gameObject || panel.transform.GetChild(i).gameObject == backButton.gameObject)))
                 Object.Destroy(panel.transform.GetChild(i).gameObject);
         }
 
@@ -227,13 +236,14 @@ public class ActionsMenuController : MonoBehaviour
         int i = 0;
         while(weapons[i] != null)
         {
-            GameObject newWeapon = Instantiate(itemButtonPrefab);
+            GameObject newWeapon = Instantiate(weaponButtonPrefab);
             Button weaponButton = newWeapon.GetComponent<Button>();
 
             newWeapon.name = weapons[i].weaponName;
 
-            newWeapon.GetComponentInChildren<TextMeshProUGUI>().text = weapons[i].weaponName;            
+            newWeapon.GetComponentInChildren<TextMeshProUGUI>().text = weapons[i].weaponName;
 
+            newWeapon.GetComponent<WeaponButtonInfo>().SetWeapon(weapons[i]);
 
             newWeapon.transform.SetParent(itemPanel.transform, false);
 
@@ -289,6 +299,7 @@ public class ActionsMenuController : MonoBehaviour
 
     private void SetItemActionPanel(WeaponData weapon)
     {
+        confirmButton.gameObject.SetActive(false);
         GameObject equipButton = GameObject.Instantiate(itemButtonPrefab);
 
         equipButton.transform.SetParent(itemActionPanel.transform, false);
@@ -320,7 +331,8 @@ public class ActionsMenuController : MonoBehaviour
             GameObject newTarget = Instantiate(targetButtonPrefab);
             Button targetButton = newTarget.GetComponent<Button>();
 
-            newTarget.GetComponent<TargetButtonInfo>().targetInfo = target;
+            newTarget.GetComponent<TargetButtonInfo>().SetButtonInfo(target, selectedWeapon);
+
 
             targetButton.onClick.AddListener(delegate { WorldStateInfo.Instance.battleController.ProcessAttack(target, selectedWeapon); });
             
@@ -377,6 +389,20 @@ public class ActionsMenuController : MonoBehaviour
     {
         weaponButton.onClick.AddListener(delegate { WorldStateInfo.Instance.battleController.MoveToAttackPosition(weapon, selectedTarget); } );
     }
+
+    public void ConfirmAttack(CharacterInfo target, WeaponData weapon)
+    {
+        itemActionPanel.SetActive(true);
+        confirmButton.gameObject.SetActive(true);
+        confirmButton.onClick.RemoveAllListeners();
+        confirmButton.onClick.AddListener(delegate { WorldStateInfo.Instance.battleController.ProcessAttack(target, weapon); });
+
+        previousButtonsPressed.Push(EventSystem.current.currentSelectedGameObject);
+
+        EventSystem.current.SetSelectedGameObject(null);
+
+        EventSystem.current.SetSelectedGameObject(itemActionPanel.transform.GetChild(0).gameObject);
+    }
     #endregion
 
     #region REVERSE_MENU_TRAVERSAL
@@ -391,10 +417,18 @@ public class ActionsMenuController : MonoBehaviour
         else
         {
             EventSystem.current.SetSelectedGameObject(previousButtonsPressed.Pop());
+            //if(EventSystem.current.gameObject == targetPanel)
+            //{
+
+            //}
             ResetMenuPanel(currentMenu);
             if (WorldStateInfo.Instance.battleController.playerCursor.transform.position != WorldStateInfo.Instance.battleController.playerCursor.currentTile.transform.position)
             {
                 WorldStateInfo.Instance.battleController.playerCursor.MoveCursor(WorldStateInfo.Instance.battleController.playerCursor.currentTile.transform.position, 5.0f);
+            }
+            if (WorldStateInfo.Instance.battlePreview.activeInHierarchy)
+            {
+                WorldStateInfo.Instance.battleController.ResetPreviewPanel();
             }
         }
     }

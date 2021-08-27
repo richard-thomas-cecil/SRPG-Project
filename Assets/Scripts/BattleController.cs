@@ -25,6 +25,11 @@ public class BattleController : MonoBehaviour
     public PlayerController playerCursor;
     private ActionsMenuController actionMenu;
     private BattleAnimationController animationController;
+    private UnitInfoController unitInfoController;
+    private BattlePreviewController battlePreviewController;
+    private TileInfoController tileInfoController;
+    private WeaponInfoController weaponInfoController;
+    private HealthPanelController healthPanelController;
 
     [SerializeField]private Stack<BattleState> stateQueue;
 
@@ -46,6 +51,11 @@ public class BattleController : MonoBehaviour
         playerCursor = GameObject.Find("Player").GetComponent<PlayerController>();
 
         actionMenu = WorldStateInfo.Instance.actionMenu.GetComponent<ActionsMenuController>();
+        unitInfoController = WorldStateInfo.Instance.unitInfoPanel.GetComponent<UnitInfoController>();
+        battlePreviewController = WorldStateInfo.Instance.battlePreview.GetComponent<BattlePreviewController>();
+        tileInfoController = WorldStateInfo.Instance.tileInfoPanel.GetComponent<TileInfoController>();
+        weaponInfoController = WorldStateInfo.Instance.weaponInfoPanel.GetComponent<WeaponInfoController>();
+        healthPanelController = WorldStateInfo.Instance.healthPanel.GetComponent<HealthPanelController>();
 
         animationController = GetComponent<BattleAnimationController>();
 
@@ -58,6 +68,8 @@ public class BattleController : MonoBehaviour
 
         playerHasMoved = new bool[playerCharacters.Count];
         enemyHasMoved = new bool[enemies.Count];
+
+        
 
         for(int i = 0; i < enemyHasMoved.Length; i++)
         {
@@ -74,7 +86,10 @@ public class BattleController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        if(tileInfoController.currentTile != playerCursor.currentTile)
+        {
+            tileInfoController.SetPanel(playerCursor.currentTile);
+        }
     }
 
     //State machine to control battle flow. Should be called at the end of any potential action with the state to change to
@@ -116,6 +131,7 @@ public class BattleController : MonoBehaviour
                 AttackAndMoveAction();
                 break;
             case BattleState.CHANGE_PHASE:
+                currentPhase = PHASE_LIST.ENEMY_PHASE;
                 StartEnemyPhase();
                 break;
             case BattleState.SECOND_ATTACK:
@@ -155,6 +171,7 @@ public class BattleController : MonoBehaviour
 
     private void StartPlayerTurn()
     {
+        playerCursor.ToggleControls();
         currentPhase = PHASE_LIST.PLAYER_PHASE;
 
         for(int i = 0; i < playerCharacters.Count; i++)
@@ -172,6 +189,7 @@ public class BattleController : MonoBehaviour
     {
         yield return new WaitUntil(() => animationController.isAnimating != true);
 
+        playerCursor.ToggleControls();
         BattleStateMachine(toState, toQueue);
     }
 
@@ -183,7 +201,11 @@ public class BattleController : MonoBehaviour
         {
             //RaycastHit2D hit = Physics2D.Raycast(playerCursor.transform.position, new Vector2(1, 0), .1f, LayerMask.GetMask("CharacterLayer"));
 
-            selectedUnit = playerCursor.currentTile.GetOccupant();                  
+            if (playerCursor.currentTile.isOccupied && ((playerCursor.currentTile.occupant.characterData.characterType == CHARACTER_TYPE.PLAYER && !playerHasMoved[playerCharacters.FindIndex(x => x == playerCursor.currentTile.occupant)]) || playerCursor.currentTile.occupant.characterData.characterType != CHARACTER_TYPE.PLAYER))
+            {
+                selectedUnit = playerCursor.currentTile.GetOccupant();
+                unitInfoController.SetPanel(selectedUnit);
+            }
 
             if (GameObject.Find("CurrentSelectableTiles") != null)
             {
@@ -209,6 +231,9 @@ public class BattleController : MonoBehaviour
             //            break;
             //    }    
             //}
+
+            
+
             BattleStateMachine(BattleState.SELECTING_UNIT);
             
             return;
@@ -224,6 +249,7 @@ public class BattleController : MonoBehaviour
                 Node moveableNode = selectedUnit.moveableTiles.Find(x => x.tile == hit.collider.gameObject.GetComponent<TileInfo>());
                 if (moveableNode.colorType == COLOR_TYPE.MOVEMENT && (!moveableNode.tile.isOccupied || moveableNode.tile.occupant == selectedUnit))
                 {
+                    playerCursor.ToggleControls();
                     tileToMoveTo = moveableNode.tile;
                     //selectedUnit.MoveCharacter(tileToMoveTo);
                     animationController.MoveCharacterToPosition(selectedUnit, tileToMoveTo);
@@ -330,6 +356,8 @@ public class BattleController : MonoBehaviour
         playerCursor.MoveCursor(selectedUnit.transform.position, 5.0f);
 
         playerCursor.currentTile = selectedUnit.currentTile;
+
+        unitInfoController.DisablePanel();
 
         selectedUnit = null;
 
@@ -440,6 +468,27 @@ public class BattleController : MonoBehaviour
         actionMenu.CreateTargetList(selectedUnit.localTargets, selectedWeapon);
     }
 
+    public void ConfirmAttack(CharacterInfo target, WeaponData weaponData, bool needConfirmButton)
+    {
+        WeaponData targetWeapon = null;
+        int targetDamage = 0;
+        if(CanCounterAttack(selectedUnit, target))
+        {
+            targetWeapon = target.weaponList[0];
+            targetDamage = CalculateDamage(target, selectedUnit, targetWeapon);
+        }
+        battlePreviewController.SetPanel(selectedUnit, target, weaponData, targetWeapon, CalculateDamage(selectedUnit, target, weaponData), targetDamage);
+        if (needConfirmButton)
+        {
+            actionMenu.ConfirmAttack(target, weaponData);
+        }
+    }
+
+    public void ResetPreviewPanel()
+    {
+        battlePreviewController.DisablePanel();
+    }
+
     public void AttackAndMoveAction()
     {
         actionMenu.AttackAndMovePanel(selectedUnit.weaponList, playerCursor.currentTile.occupant);
@@ -451,6 +500,7 @@ public class BattleController : MonoBehaviour
     {
         tileToMoveTo = selectedUnit.FindBestTile(weapon, target);
 
+        playerCursor.ToggleControls();
         animationController.MoveCharacterToPosition(selectedUnit, tileToMoveTo);
         UnityEngine.Object.Destroy(GameObject.Find("CurrentSelectableTiles"));
 
@@ -461,11 +511,56 @@ public class BattleController : MonoBehaviour
     {
         yield return new WaitUntil(() => !animationController.isAnimating);
 
-        ProcessAttack(target, weapon);
+        playerCursor.ToggleControls();
+        ConfirmAttack(target, weapon, true);
+    }
+
+    private int CalculateDamage(CharacterInfo attacker, CharacterInfo defender, WeaponData attackerWeapon)
+    {
+        int damage;
+        if(attackerWeapon == null)
+        {
+            return 0;
+        }
+        if (attackerWeapon.isRanged)
+        {
+            switch (attackerWeapon.damageType)
+            {
+                case DAMAGE_TYPE.ENERGY:
+                    damage = (attacker.characterData.PREC + attackerWeapon.ATK - (defender.characterData.SHIELD + defender.currentTile.defBoost));
+                    break;
+                case DAMAGE_TYPE.PHYSICAL:
+                    damage = (attacker.characterData.PREC + attackerWeapon.ATK - (defender.characterData.ARMOR + defender.currentTile.defBoost));
+                    break;
+                default:
+                    damage = (attacker.characterData.PREC + attackerWeapon.ATK - (defender.characterData.ARMOR + defender.currentTile.defBoost));
+                    break;
+            }
+        }
+        else
+        {
+            switch (attackerWeapon.damageType)
+            {
+                case DAMAGE_TYPE.ENERGY:
+                    damage = (attacker.characterData.PHY + attackerWeapon.ATK - (defender.characterData.SHIELD + defender.currentTile.defBoost));
+                    break;
+                case DAMAGE_TYPE.PHYSICAL:
+                    damage = (attacker.characterData.PHY + attackerWeapon.ATK - (defender.characterData.ARMOR + defender.currentTile.defBoost));
+                    break;
+                default:
+                    damage = (attacker.characterData.PHY + attackerWeapon.ATK - (defender.characterData.ARMOR + defender.currentTile.defBoost));
+                    break;
+            }
+        }
+        return damage;
     }
 
     public void ProcessAttack(CharacterInfo selectedTarget, WeaponData selectedWeapon)
     {
+        actionMenu.ResetMenus();
+        unitInfoController.DisablePanel();
+        battlePreviewController.DisablePanel();
+        healthPanelController.SetPanel(selectedUnit, selectedTarget);
         targetedUnit = selectedTarget;
 
         int crit = 1;
@@ -552,7 +647,7 @@ public class BattleController : MonoBehaviour
     {
         int hitRoll = WorldStateInfo.Instance.GetNextRandomNumber();
 
-        if (hitRoll < attackerHit - defenderDodge)
+        if (hitRoll < attackerHit - (defenderDodge))
         {
             return true;
         }
@@ -565,13 +660,13 @@ public class BattleController : MonoBehaviour
         switch (selectedWeapon.damageType)
         {
             case DAMAGE_TYPE.ENERGY:
-                selectedTarget.characterData.HP_CURRENT = selectedTarget.characterData.HP_CURRENT - ((attackingUnit.characterData.PREC + selectedWeapon.ATK * (crit)) - selectedTarget.characterData.SHIELD);
+                selectedTarget.characterData.HP_CURRENT = selectedTarget.characterData.HP_CURRENT - ((attackingUnit.characterData.PREC + selectedWeapon.ATK * (crit)) - (selectedTarget.characterData.SHIELD + selectedTarget.currentTile.defBoost));
                 break;
             case DAMAGE_TYPE.PHYSICAL:
-                selectedTarget.characterData.HP_CURRENT = selectedTarget.characterData.HP_CURRENT - ((attackingUnit.characterData.PREC + selectedWeapon.ATK * (crit)) - selectedTarget.characterData.ARMOR);
+                selectedTarget.characterData.HP_CURRENT = selectedTarget.characterData.HP_CURRENT - ((attackingUnit.characterData.PREC + selectedWeapon.ATK * (crit)) - (selectedTarget.characterData.ARMOR + selectedTarget.currentTile.defBoost));
                 break;
             default:
-                selectedTarget.characterData.HP_CURRENT = selectedTarget.characterData.HP_CURRENT - ((attackingUnit.characterData.PREC + selectedWeapon.ATK * (crit)) - selectedTarget.characterData.ARMOR);
+                selectedTarget.characterData.HP_CURRENT = selectedTarget.characterData.HP_CURRENT - ((attackingUnit.characterData.PREC + selectedWeapon.ATK * (crit)) - (selectedTarget.characterData.ARMOR + selectedTarget.currentTile.defBoost));
                 break;
         }
     }
@@ -581,13 +676,13 @@ public class BattleController : MonoBehaviour
         switch (selectedWeapon.damageType)
         {
             case DAMAGE_TYPE.ENERGY:
-                selectedTarget.characterData.HP_CURRENT = selectedTarget.characterData.HP_CURRENT - ((attackingUnit.characterData.PHY + selectedWeapon.ATK * (crit)) - selectedTarget.characterData.SHIELD);
+                selectedTarget.characterData.HP_CURRENT = selectedTarget.characterData.HP_CURRENT - ((attackingUnit.characterData.PHY + selectedWeapon.ATK * (crit)) - (selectedTarget.characterData.SHIELD + selectedTarget.currentTile.defBoost));
                 break;
             case DAMAGE_TYPE.PHYSICAL:
-                selectedTarget.characterData.HP_CURRENT = selectedTarget.characterData.HP_CURRENT - ((attackingUnit.characterData.PHY + selectedWeapon.ATK * (crit)) - selectedTarget.characterData.ARMOR);
+                selectedTarget.characterData.HP_CURRENT = selectedTarget.characterData.HP_CURRENT - ((attackingUnit.characterData.PHY + selectedWeapon.ATK * (crit)) - (selectedTarget.characterData.ARMOR + selectedTarget.currentTile.defBoost));
                 break;
             default:
-                selectedTarget.characterData.HP_CURRENT = selectedTarget.characterData.HP_CURRENT - ((attackingUnit.characterData.PHY + selectedWeapon.ATK * (crit)) - selectedTarget.characterData.ARMOR);
+                selectedTarget.characterData.HP_CURRENT = selectedTarget.characterData.HP_CURRENT - ((attackingUnit.characterData.PHY + selectedWeapon.ATK * (crit)) - (selectedTarget.characterData.ARMOR + selectedTarget.currentTile.defBoost));
                 break;
         }
     }
@@ -618,10 +713,16 @@ public class BattleController : MonoBehaviour
 
     private void PostDamageProcessing(CharacterInfo defender)
     {
+        healthPanelController.AddToUpdateQueue(defender.GetHPCurrent(), defender);
         if(defender.characterData.HP_CURRENT <= 0)
         {
             defender.flagIsDead = true;
         }
+    }
+
+    public void UpdateHealthPanel()
+    {
+        healthPanelController.UpdatePanel();
     }
 
     private void PostBattleCleanup()
@@ -644,6 +745,7 @@ public class BattleController : MonoBehaviour
         {
             selectedUnit.gameObject.SetActive(false);
         }
+        healthPanelController.DisablePanel();
         PostActionCleanup();
     }
 
@@ -671,18 +773,25 @@ public class BattleController : MonoBehaviour
         playerCursor.SwitchControlType("FieldBattle");
         playerCursor.MoveCursor(playerCursor.currentTile.transform.position, 1.0f);
 
+        unitInfoController.DisablePanel();
+
         playerHasMoved[playerCharacters.IndexOf(selectedUnit)] = true;
         selectedUnit.SetNewTile(tileToMoveTo);
         selectedUnit = null;
 
         foreach(var character in playerCharacters)
         {
-            character.RecolorGraph();
+            //character.RecolorGraph();
+            character.SetNewTile(character.currentTile);
+        }
+        foreach(var enemy in enemies)
+        {
+            enemy.SetNewTile(enemy.currentTile);
         }
 
         if (ToEnemyPhase())
         {
-            currentPhase = PHASE_LIST.ENEMY_PHASE;
+            //currentPhase = PHASE_LIST.ENEMY_PHASE;
             BattleStateMachine(BattleState.CHANGE_PHASE);
         }
         else
@@ -703,13 +812,35 @@ public class BattleController : MonoBehaviour
     }
 
 
+    public void EndTurnAction()
+    {
+        actionMenu.ResetMenus();
+        playerCursor.SwitchControlType("FieldBattle");
+
+        for (int i = 0; i < playerHasMoved.Length; i++)
+        {
+            playerHasMoved[i] = true;
+        }
+
+        BattleStateMachine(BattleState.CHANGE_PHASE);
+    }
 
 
+    public void SetWeaponInfoPanel(WeaponData weapon, GameObject weaponButtonObject)
+    {
+        weaponInfoController.SetPanel(weapon, weaponButtonObject);
+        //weaponInfoController.GetComponent<RectTransform>().position = new Vector3(weaponButtonObject.transform.localPosition.x - 20, weaponButtonObject.transform.localPosition.y, weaponButtonObject.transform.localPosition.z);
+    }
 
+    public void DisableWeaponInfoPanel()
+    {
+        weaponInfoController.DisablePanel();
+    }
 
     #region ENEMY_PHASE
     private void StartEnemyPhase()
     {
+        playerCursor.ToggleControls();
         processNextEnemy = true;
         for(int i = 0; i < enemyHasMoved.Length; i++)
         {
@@ -721,19 +852,24 @@ public class BattleController : MonoBehaviour
     private IEnumerator PerformEnemyPhase()
     {
         foreach(var enemy in enemies)
-        {            
+        {
             if (!enemy.flagIsDead)
             {
                 processNextEnemy = false;
+                enemy.SetNewTile(enemy.currentTile);
                 enemy.enemyAI.GetTarget();
 
-                if (enemy.enemyAI.chosenAction == ENEMY_ACTIONS.ATTACK)
-                {
-                    FindClosestTileAndAttack(enemy);
-                }
-                else if (enemy.enemyAI.chosenAction == ENEMY_ACTIONS.MOVE)
-                {
-
+                switch (enemy.enemyAI.chosenAction) {
+                    case ENEMY_ACTIONS.ATTACK:                    
+                        FindClosestTileAndAttack(enemy);
+                        break;
+                    case ENEMY_ACTIONS.MOVE:
+                        MoveTowardTarget(enemy);
+                        break;
+                    case ENEMY_ACTIONS.WAIT:
+                        EnemyCleanup(enemy);
+                        break;
+                    
                 }
             }
             enemyHasMoved[enemies.IndexOf(enemy)] = true;
@@ -741,6 +877,15 @@ public class BattleController : MonoBehaviour
         }
 
         StartPlayerTurn();
+    }
+
+    private void MoveTowardTarget(CharacterInfo enemy)
+    {
+        animationController.MoveCharacterToPosition(enemy, enemy.subGraph.graphNodes.Find(x => x.tile == enemy.enemyAI.chosenTile).tile);
+
+        StartCoroutine(HoldEnemyAction(EnemyCleanup, enemy));
+
+        enemy.SetNewTile(enemy.enemyAI.chosenTile);
     }
 
     private void FindClosestTileAndAttack(CharacterInfo enemy)
@@ -790,6 +935,8 @@ public class BattleController : MonoBehaviour
 
         int crit = 1;
 
+        healthPanelController.SetPanel(enemy, target);
+
         if (DoesAttackHit(enemyHit, playerDodge))
         {
             if (WorldStateInfo.Instance.GetNextRandomNumber() < enemyCrit)
@@ -799,13 +946,13 @@ public class BattleController : MonoBehaviour
                 switch (weapon.damageType)
                 {
                     case DAMAGE_TYPE.ENERGY:
-                        target.characterData.HP_CURRENT = target.characterData.HP_CURRENT - ((enemy.characterData.PREC + weapon.ATK * (crit)) - target.characterData.SHIELD);
+                        target.characterData.HP_CURRENT = target.characterData.HP_CURRENT - ((enemy.characterData.PREC + weapon.ATK * (crit)) - (target.characterData.SHIELD + target.currentTile.defBoost));
                         break;
                     case DAMAGE_TYPE.PHYSICAL:
-                        target.characterData.HP_CURRENT = target.characterData.HP_CURRENT - ((enemy.characterData.PREC + weapon.ATK * (crit)) - target.characterData.ARMOR);
+                        target.characterData.HP_CURRENT = target.characterData.HP_CURRENT - ((enemy.characterData.PREC + weapon.ATK * (crit)) - (target.characterData.ARMOR + target.currentTile.defBoost));
                         break;
                     default:
-                        target.characterData.HP_CURRENT = target.characterData.HP_CURRENT - ((enemy.characterData.PREC + weapon.ATK * (crit)) - target.characterData.ARMOR);
+                        target.characterData.HP_CURRENT = target.characterData.HP_CURRENT - ((enemy.characterData.PREC + weapon.ATK * (crit)) - (target.characterData.ARMOR + target.currentTile.defBoost));
                         break;
                 }
             }
@@ -814,19 +961,20 @@ public class BattleController : MonoBehaviour
                 switch (weapon.damageType)
                 {
                     case DAMAGE_TYPE.ENERGY:
-                        target.characterData.HP_CURRENT = target.characterData.HP_CURRENT - ((enemy.characterData.PHY + weapon.ATK * (crit)) - target.characterData.SHIELD);
+                        target.characterData.HP_CURRENT = target.characterData.HP_CURRENT - ((enemy.characterData.PHY + weapon.ATK * (crit)) - (target.characterData.SHIELD + target.currentTile.defBoost));
                         break;
                     case DAMAGE_TYPE.PHYSICAL:
-                        target.characterData.HP_CURRENT = target.characterData.HP_CURRENT - ((enemy.characterData.PHY + weapon.ATK * (crit)) - target.characterData.ARMOR);
+                        target.characterData.HP_CURRENT = target.characterData.HP_CURRENT - ((enemy.characterData.PHY + weapon.ATK * (crit)) - (target.characterData.ARMOR + target.currentTile.defBoost));
                         break;
                     default:
-                        target.characterData.HP_CURRENT = target.characterData.HP_CURRENT - ((enemy.characterData.PHY + weapon.ATK * (crit)) - target.characterData.ARMOR);
+                        target.characterData.HP_CURRENT = target.characterData.HP_CURRENT - ((enemy.characterData.PHY + weapon.ATK * (crit)) - (target.characterData.ARMOR + target.currentTile.defBoost));
                         break;
                 }
             }
             PostDamageProcessing(target);
         }
         animationController.AddToAnimationQueue(enemy, target);
+        healthPanelController.AddToUpdateQueue(target.GetHPCurrent(), target);
 
         if(CanCounterAttack(enemy, target))
         {
@@ -846,6 +994,7 @@ public class BattleController : MonoBehaviour
 
             }
             animationController.AddToAnimationQueue(target, enemy);
+            healthPanelController.AddToUpdateQueue(enemy.GetHPCurrent(), enemy);
         }
 
         CharacterInfo secondAttack = ProcessSecondAttack(enemy, target);
@@ -866,12 +1015,14 @@ public class BattleController : MonoBehaviour
                 }
                 PostDamageProcessing(enemy);
                 animationController.AddToAnimationQueue(target, enemy);
+                healthPanelController.AddToUpdateQueue(enemy.GetHPCurrent(), enemy);
             }
             else if (secondAttack == enemy)
             {
                 ProcessEnemyAttack(enemy, target);
                 PostDamageProcessing(selectedUnit);
                 animationController.AddToAnimationQueue(enemy, target);
+                healthPanelController.AddToUpdateQueue(target.GetHPCurrent(), target);
             }
             
         }
@@ -939,6 +1090,8 @@ public class BattleController : MonoBehaviour
             enemy.gameObject.SetActive(false);
         if (enemy.enemyAI.chosenTarget.flagIsDead == true)
             enemy.enemyAI.chosenTarget.gameObject.SetActive(false);
+
+        healthPanelController.DisablePanel();
 
         processNextEnemy = true;
     }

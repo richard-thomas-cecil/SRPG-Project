@@ -48,12 +48,13 @@ public class BattleAnimationController : MonoBehaviour
     private IEnumerator MoveThroughPath(CharacterInfo characterInfo, Stack<TileInfo> path)
     {
         Vector3 nextPosition = path.Pop().transform.position;
+        
         while (path.Count != 0)
         {
             if (characterInfo.transform.position == nextPosition)
-            {
+            {                
                 nextPosition = path.Pop().transform.position;
-                yield return StartCoroutine(SmoothMovement(nextPosition, characterInfo.GetRigidbody2D(), .10f));
+                yield return StartCoroutine(SmoothMovement(nextPosition, characterInfo.GetRigidbody2D(), .15f));
             }
         }
 
@@ -64,12 +65,17 @@ public class BattleAnimationController : MonoBehaviour
     {
         float sqrRemainingDistance = (rigidBody2D.transform.position - end).sqrMagnitude;
 
-        while (sqrRemainingDistance > float.Epsilon)
+        Debug.Log(Mathf.Approximately(sqrRemainingDistance, 0.0f));
+
+        while (sqrRemainingDistance >= 0.000001)
         {
             Vector3 newPosition = Vector3.MoveTowards(rigidBody2D.transform.position, end, speed);
 
             rigidBody2D.MovePosition(newPosition);
+
             sqrRemainingDistance = (rigidBody2D.transform.position - end).sqrMagnitude;
+
+            //Debug.Log((rigidBody2D.transform.position - end).sqrMagnitude);
 
             yield return null;
         }
@@ -109,7 +115,7 @@ public class BattleAnimationController : MonoBehaviour
 
         if((attackDirection.y > attackDirection.x && attackPosition.y - defenderPosition.y != 0) || attackPosition.x - defenderPosition.x == 0)
         {
-            float toMoveY = (attackPosition.y - defenderPosition.y) / (Mathf.Abs(attackPosition.y -defenderPosition.y));
+            float toMoveY = (defenderPosition.y - attackPosition.y) / (Mathf.Abs(defenderPosition.y - attackPosition.y));
             toMovePos = new Vector3(attackPosition.x, attackPosition.y + (toMoveY * .25f), attackPosition.z);
         }
         else if(attackDirection.x >= attackDirection.y || attackPosition.y - defenderPosition.y == 0)
@@ -126,6 +132,8 @@ public class BattleAnimationController : MonoBehaviour
         yield return SmoothMovement(toMovePos, attacker.GetRigidbody2D(), .05f);
 
         yield return new WaitForSeconds(.35f);
+
+        WorldStateInfo.Instance.battleController.UpdateHealthPanel();
 
         yield return SmoothMovement(attackPosition, attacker.GetRigidbody2D(), .05f);
 

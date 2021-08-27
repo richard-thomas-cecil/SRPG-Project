@@ -78,8 +78,14 @@
     <Compile Include="Assets\Scripts\ScriptableObjects\WeaponData.cs" />
     <Compile Include="Assets\Scripts\TileInfo.cs" />
     <Compile Include="Assets\Scripts\UI Scripts\ActionsMenuController.cs" />
+    <Compile Include="Assets\Scripts\UI Scripts\BattlePreviewController.cs" />
     <Compile Include="Assets\Scripts\UI Scripts\ButtonInfo.cs" />
+    <Compile Include="Assets\Scripts\UI Scripts\HealthPanelController.cs" />
     <Compile Include="Assets\Scripts\UI Scripts\TargetButtonInfo.cs" />
+    <Compile Include="Assets\Scripts\UI Scripts\TileInfoController.cs" />
+    <Compile Include="Assets\Scripts\UI Scripts\UnitInfoController.cs" />
+    <Compile Include="Assets\Scripts\UI Scripts\WeaponButtonInfo.cs" />
+    <Compile Include="Assets\Scripts\UI Scripts\WeaponInfoController.cs" />
     <Compile Include="Assets\Scripts\Utility Scripts\CreateTiles.cs" />
     <Compile Include="Assets\Scripts\Utility Scripts\Enumerations.cs" />
     <Compile Include="Assets\Scripts\Utility Scripts\Graphing Scripts\Dijsktras.cs" />

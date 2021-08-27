@@ -16,7 +16,8 @@ public struct Target_Struct
 
 public class CharacterInfo : MonoBehaviour
 {
-    public CharacterData characterData;
+    [SerializeField]private CharacterData baseCharacterData;
+    [HideInInspector] public CharacterData characterData;
     //public Graph moveableTiles;
     public List<Node> moveableTiles;
     public Graph subGraph;
@@ -77,6 +78,7 @@ public class CharacterInfo : MonoBehaviour
 
     private void InitializeCharacterData()
     {
+        characterData = Instantiate(baseCharacterData);
         characterData.HP_CURRENT = characterData.HP;
         characterData.HIT = characterData.baseHit + (characterData.AIM * 2);
         characterData.DODGE = characterData.baseDodge + (characterData.SPEED * 2);
@@ -147,6 +149,7 @@ public class CharacterInfo : MonoBehaviour
     //Gets all valid targets before movement
     public void GetTargetList()
     {
+        targetList.Clear();
         foreach(var tile in moveableTiles)
         {
             RaycastHit2D hit = Physics2D.Raycast(tile.tile.transform.position, new Vector2(0, 1), 0.1f, LayerMask.GetMask("CharacterLayer"));
@@ -375,13 +378,13 @@ public class CharacterInfo : MonoBehaviour
                     return false;
                 break;
             case CHARACTER_TYPE.ENEMY:
-                if (evaluationTarget.characterData.characterType != CHARACTER_TYPE.ENEMY)
+                if (evaluationTarget.characterData.characterType == CHARACTER_TYPE.ENEMY)
                     return false;
                 break;
             default:
                 break;
         }
-        return false;
+        return true;
     }
 
     public void RunDijsktras()

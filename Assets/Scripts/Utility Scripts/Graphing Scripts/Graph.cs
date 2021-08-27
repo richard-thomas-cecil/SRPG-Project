@@ -13,6 +13,7 @@ public class Graph
     public Node startNode;                                              //Where to start building the graph from.
 
     public int[,] adjacencyMatrix;                                      //Adjacency Matrix
+    public int[,] rangeTable;
 
     private int currentNodeIndex;                                   //Each node and tile will be assigned an index, starting from 0
 
@@ -26,11 +27,13 @@ public class Graph
         maxNodes = GameObject.Find("MapInfo").GetComponentsInChildren<TileInfo>().Length;       //GetNumber of tiles on map
 
         adjacencyMatrix = new int[maxNodes, maxNodes];
+        rangeTable = new int[maxNodes, maxNodes];
         graphNodes.Clear();                                                                     //Clear out any nodes if they exsist
         currentNodeIndex = 0;
 
 
         startNode = AddNode(startingTile.GetComponent<TileInfo>(), 9999, 0, 0);
+        BuildRangeTable();
     }
 
     //This method may not be used at any point anymore
@@ -265,6 +268,52 @@ public class Graph
         return newTile;
     }
 
+    private void BuildRangeTable()
+    {
+        foreach(var node in graphNodes)
+        {
+            RangeTableOnTile(node.nodeIndex);
+        }
+    }
+
+    private void RangeTableOnTile(int tileIndex)
+    {
+        Queue<int> tileQueue = new Queue<int>();
+        bool[] visited = new bool[maxNodes];
+        int currentRange = 0;
+
+        int currentIndex;
+
+        for (int i = 0; i < maxNodes; i++)
+        {
+            visited[i] = false;
+        }
+
+        tileQueue.Enqueue(tileIndex);
+
+        rangeTable[tileIndex, tileIndex] = 0;
+        visited[tileIndex] = true;
+
+        while (tileQueue.Count != 0)
+        {
+            currentIndex = tileQueue.Dequeue();
+            currentRange = rangeTable[tileIndex, currentIndex];
+            for (int v = 0; v < maxNodes; v++)
+            {
+                if (adjacencyMatrix[currentIndex, v] != 0)
+                {
+                    if (!visited[v])
+                    {
+                        tileQueue.Enqueue(v);
+                        visited[v] = true;
+
+                        rangeTable[tileIndex, v] = currentRange + 1;
+                    }
+                }
+            }
+        }
+    }
+
     //Builds a subGraph based off of the adjacency matrix using Breadth-first search
     public Graph BuildSubGraph(int root, int moveableDistance, int minRange, int maxRange, CharacterInfo currentCharacter)
     {
@@ -306,98 +355,112 @@ public class Graph
 
             currentNode = new Node(currentNodeBase.tile, currentIndex);         //Create a new node using information from currentNodeBase
 
+            
 
             //If the current Index has not previously been determined to be outside of the characters range (defined by moveableDistance + maxRange), then
             //proceed to evaluate its neighboring nodes, add them to the queue if needed, and finally add it to the subgraph
-            if (distanceFromStart[currentIndex] <= moveableDistance + maxRange)
+            if (distanceFromStart[currentIndex] <= moveableDistance)
             {
                 for (int v = 0; v < maxNodes; v++)
                 {
-                    if (adjacencyMatrix[currentIndex, v] != 0)
+                    subGraph.adjacencyMatrix[currentIndex, v] = adjacencyMatrix[currentIndex, v];
+                    
+                    if (adjacencyMatrix[currentIndex, v] != 0 && distanceFromStart[currentIndex] + adjacencyMatrix[currentIndex,v] <= moveableDistance)
                     {
-                        subGraph.adjacencyMatrix[currentIndex, v] = adjacencyMatrix[currentIndex, v];
                         //If tile of index v has not previously been visited, add it to the queue
                         if (!visited[v])
                             queue.Enqueue(graphNodes.Find(x => x.nodeIndex == v));
                         visited[v] = true;
 
-                        TileInfo tileV = graphNodes.Find(x => x.nodeIndex == v).tile;
-
-                        if (currentIndex == 12 && v == 11)
-                        {
-                            Debug.Log("");
-                        }
 
                         //Due to priority of Node colors, we need to check and see if the current distance of tile of index v is greater than the current node + its distance to the next node
 
                         distanceFromStart[v] = FindMinDistance(distanceFromStart[v], distanceFromStart[currentIndex] + adjacencyMatrix[currentIndex, v]);
 
 
-                        if (tileV.occupant != null && nodeColor[v] == COLOR_TYPE.MOVEMENT && EvaluateIsEnemy(currentCharacter, tileV.occupant))
-                        {
-                            distanceFromStart[v] = moveableDistance + 1;
-                        }
+                        //if (tileV.occupant != null && nodeColor[v] == COLOR_TYPE.MOVEMENT && EvaluateIsEnemy(currentCharacter, tileV.occupant))
+                        //{
+                        //    distanceFromStart[v] = moveableDistance + 1;
+                        //}
 
-                        int addRange = 0;
+                        //if (distanceFromStart[v] > moveableDistance && graphNodes[currentIndex].tile.isOccupied && currentIndex != root && !currentCharacter.EvaluateIsEnemy(graphNodes[currentIndex].tile.occupant) && distanceFromStart[currentIndex] <= moveableDistance && (nodeColor[v] != COLOR_TYPE.ATTACK))
+                        //{
+                        //    addRange = 1;
+                        //}
+                        //else if (tileV.isOccupied && currentNode.tile.isOccupied && currentIndex != root)
+                        //    addRange = 2;
 
-                        if (graphNodes[currentIndex].tile.isOccupied && currentIndex !=root && !currentCharacter.EvaluateIsEnemy(graphNodes[currentIndex].tile.occupant) && distanceFromStart[currentIndex] <= moveableDistance && nodeColor[v] == COLOR_TYPE.NONE)
-                        {
-                            addRange = 1;
-                        }
-                        
-                        //If the tile of index v is evaluated as farther from the root than the unit can move, we need to then check to see if it is within the units max range
-                        //by finding the minimum distance between itself and either 1 away from the max moveable distance if the currentNode has a distance <= the movement of the unit,
-                        //or one tile further from the current Index if the current Node is farther away from the moveable distance.
-                        //This ensures that all tiles are properly evaluated as being in or out of units range
-                        if (distanceFromStart[v]> moveableDistance + addRange && distanceFromStart[currentIndex] + addRange < moveableDistance + maxRange && !tileV.isOccupied /*&& (!graphNodes[currentIndex].tile.isOccupied || currentIndex == root)*/)
-                        {
-                            if (distanceFromStart[v] <= moveableDistance)
-                            {
-                                nodeColor[v] = COLOR_TYPE.MOVEMENT;
-                            }
-                            if (distanceFromStart[currentIndex] + addRange <= moveableDistance)
-                            {
-                                distanceFromStart[v] = FindMinDistanceInRange(distanceFromStart[v] + addRange, moveableDistance + 1 + addRange, moveableDistance + minRange, moveableDistance + maxRange);
-                                if (distanceFromStart[v] <= moveableDistance + maxRange && (nodeColor[currentIndex] == COLOR_TYPE.MOVEMENT || markAsInRange[currentIndex]))
-                                    markAsInRange[v] = true;
-                            }
-                            else if (distanceFromStart[currentIndex] + addRange > moveableDistance)
-                            {
-                                distanceFromStart[v] = FindMinDistanceInRange(distanceFromStart[v] + addRange, distanceFromStart[currentIndex] + 1 + addRange, moveableDistance + minRange, moveableDistance + maxRange);
-                                if(distanceFromStart[v] <= moveableDistance + maxRange && (nodeColor[currentIndex] == COLOR_TYPE.MOVEMENT || markAsInRange[currentIndex]))
-                                    markAsInRange[v] = true;
-                            }
-
-                            
-                        }
+                        ////If the tile of index v is evaluated as farther from the root than the unit can move, we need to then check to see if it is within the units max range
+                        ////by finding the minimum distance between itself and either 1 away from the max moveable distance if the currentNode has a distance <= the movement of the unit,
+                        ////or one tile further from the current Index if the current Node is farther away from the moveable distance.
+                        ////This ensures that all tiles are properly evaluated as being in or out of units range
+                        //if (distanceFromStart[v] + addRange > moveableDistance&& distanceFromStart[currentIndex] + addRange < moveableDistance + maxRange /*&& (!graphNodes[currentIndex].tile.isOccupied || currentIndex == root)*/)
+                        //{
+                        //    if (distanceFromStart[v] <= moveableDistance)
+                        //    {
+                        //        nodeColor[v] = COLOR_TYPE.MOVEMENT;
+                        //    }
+                        //    if (distanceFromStart[currentIndex] + addRange <= moveableDistance)
+                        //    {
+                        //        distanceFromStart[v] = FindMinDistanceInRange(distanceFromStart[v] + addRange, moveableDistance + 1 + addRange, moveableDistance + minRange, moveableDistance + maxRange);
+                        //        if (distanceFromStart[v] <= moveableDistance + maxRange && distanceFromStart[v] >= minRange && (nodeColor[currentIndex] == COLOR_TYPE.MOVEMENT || markAsInRange[currentIndex]))
+                        //            markAsInRange[v] = true;
+                        //    }
+                        //    else if (distanceFromStart[currentIndex] + addRange > moveableDistance)
+                        //    {
+                        //        distanceFromStart[v] = FindMinDistanceInRange(distanceFromStart[v] + addRange, distanceFromStart[currentIndex] + 1 + addRange, moveableDistance + minRange, moveableDistance + maxRange);
+                        //        if(distanceFromStart[v] <= moveableDistance + maxRange && distanceFromStart[v] >= minRange && (nodeColor[currentIndex] == COLOR_TYPE.MOVEMENT || markAsInRange[currentIndex]))
+                        //            markAsInRange[v] = true;
+                        //    }
 
 
-                        //Check to see if a node is in range of another node and color it as attack
+                        //}
 
-                        if (markAsInRange[v] && nodeColor[v] != COLOR_TYPE.MOVEMENT)
-                        {
-                            nodeColor[v] = COLOR_TYPE.ATTACK;
-                        }
 
-                        //If tile is in moveable range, color it as movement. Movement color overrides attack color                   
-                        if (distanceFromStart[v] <= moveableDistance)
-                        {
-                            nodeColor[v] = COLOR_TYPE.MOVEMENT;
-                            
-                        }
-                        
+                        ////Check to see if a node is in range of another node and color it as attack
+
+                        //if (markAsInRange[v] && nodeColor[v] != COLOR_TYPE.MOVEMENT)
+                        //{
+                        //    nodeColor[v] = COLOR_TYPE.ATTACK;
+                        //}
+
+                        ////If tile is in moveable range, color it as movement. Movement color overrides attack color                   
+                        //if (distanceFromStart[v] <= moveableDistance)
+                        //{
+                        //    nodeColor[v] = COLOR_TYPE.MOVEMENT;
+
+                        //}
+
                     }
-
                 }
                 subGraph.graphNodes.Add(currentNode);
             }
             
         }
-        //Correct color for each node
-        foreach(var node in subGraph.graphNodes)
+
+        int subGraphCount = subGraph.graphNodes.Count;
+        for(int i = 0; i < subGraphCount; i++)
         {
-            node.colorType = nodeColor[node.nodeIndex];
+            for (int j = 0; j < maxNodes; j++)
+            {
+                if (!visited[j] && rangeTable[subGraph.graphNodes[i].nodeIndex, j] >= minRange && rangeTable[subGraph.graphNodes[i].nodeIndex, j] <= maxRange && (!subGraph.graphNodes[i].tile.isOccupied || subGraph.graphNodes[i].nodeIndex == root))
+                {
+                    Node rangeNode = new Node(graphNodes[j].tile, j);
+                    visited[j] = true;
+                    subGraph.graphNodes.Add(rangeNode);
+                    markAsInRange[j] = true;
+                    distanceFromStart[j] = moveableDistance + rangeTable[subGraph.graphNodes[i].nodeIndex, j];
+                }
+            }
+        }
+        //Correct color for each node
+        foreach (var node in subGraph.graphNodes)
+        {
             node.weight = distanceFromStart[node.nodeIndex];
+            if (node.weight <= moveableDistance)
+                node.colorType = COLOR_TYPE.MOVEMENT;
+            else if (markAsInRange[node.nodeIndex])
+                node.colorType = COLOR_TYPE.ATTACK;
         }
 
 
@@ -426,38 +489,29 @@ public class Graph
         return minDistance;
     }    
 
+   
     public void RecolorGraph(int moveableDistance, int minRange, int maxRange, CharacterInfo currentCharacter)
     {
-        bool[] markAsInRange = new bool[maxNodes];
+        bool[] markAsInRange = new bool[maxNodes];        
 
-        for(int i = 0; i < maxNodes; i++)
-        {
-            markAsInRange[i] = false;
-        }
 
         foreach(var node in graphNodes)
         {
-                for (int v = 0; v < graphNodes.Count; v++)
-                {
-                if (graphNodes[v].nodeIndex == 5)
-                    Debug.Log(node.nodeIndex + " ");
-                if ((graphNodes[v].weight > moveableDistance) && adjacencyMatrix[node.nodeIndex, graphNodes[v].nodeIndex] != 0 && (node.colorType == COLOR_TYPE.MOVEMENT || markAsInRange[graphNodes[v].nodeIndex]) && (!node.tile.isOccupied || node.tile.occupant == currentCharacter))
-                    {
-                        
-                        markAsInRange[graphNodes[v].nodeIndex] = true;
-                    }
-                }
+            for (int v = 0; v < graphNodes.Count; v++)
+            {
+            }
+
         }
 
-        for(int i = 0; i < graphNodes.Count; i++)
-        {
-            if (markAsInRange[graphNodes[i].nodeIndex])
-                graphNodes[i].colorType = COLOR_TYPE.ATTACK;
-            else if (graphNodes[i].weight <= moveableDistance)
-                graphNodes[i].colorType = COLOR_TYPE.MOVEMENT;
-            else
-                graphNodes[i].colorType = COLOR_TYPE.NONE;
-        }
+        //for(int i = 0; i < graphNodes.Count; i++)
+        //{
+        //    if (markAsInRange[graphNodes[i].nodeIndex])
+        //        graphNodes[i].colorType = COLOR_TYPE.ATTACK;
+        //    if (graphNodes[i].weight <= moveableDistance)
+        //        graphNodes[i].colorType = COLOR_TYPE.MOVEMENT;
+        //    else
+        //        graphNodes[i].colorType = COLOR_TYPE.NONE;
+        //}
 
     }
 
