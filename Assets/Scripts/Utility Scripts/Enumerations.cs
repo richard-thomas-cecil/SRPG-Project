@@ -82,3 +82,10 @@ public enum ENEMY_ACTIONS
     ATTACK,
     WAIT
 }
+
+public enum AI_TYPE
+{
+    SEEKER,
+    STANDARD,
+    STATIONARY
+}

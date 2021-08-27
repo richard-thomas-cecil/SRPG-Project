@@ -19,7 +19,12 @@ public class WorldStateInfo : MonoBehaviour
 
     public BattleController battleController;       //Battle controller. BattleController script should be attached to same object as this script.
 
-    public GameObject actionMenu;                   //Probably going to remove this
+    public GameObject actionMenu;                   
+    public GameObject unitInfoPanel;
+    public GameObject battlePreview;
+    public GameObject tileInfoPanel;
+    public GameObject weaponInfoPanel;
+    public GameObject healthPanel;
 
     public List<GameObject> UI_Prefabs;             //TBD
 
@@ -46,12 +51,16 @@ public class WorldStateInfo : MonoBehaviour
         mapTileGraph.BuildGraph(currentMapInfo.startingPositions[0]);
         dijsktrasFullMap = new Dijsktras(mapTileGraph);
         actionMenu = GameObject.Find("ActionMenu");
+        unitInfoPanel = GameObject.Find("UnitInfoCanvas");
+        battlePreview = GameObject.Find("BattlePreviewCanvas");
+        tileInfoPanel = GameObject.Find("TileInfoCanvas");
+        weaponInfoPanel = GameObject.Find("WeaponInfoCanvas");
+        healthPanel = GameObject.Find("HealthCanvas");
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        
     }
 
     // Update is called once per frame

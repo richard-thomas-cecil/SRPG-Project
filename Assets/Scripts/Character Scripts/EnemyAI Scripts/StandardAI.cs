@@ -11,32 +11,72 @@ public class StandardAI : MonoBehaviour
     public TileInfo chosenTile;
 
     public ENEMY_ACTIONS chosenAction;
+    public AI_TYPE aiType;
+
+    private List<CharacterInfo> validTargets;
 
     void Start()
     {
         characterInfo = gameObject.GetComponent<CharacterInfo>();
+        validTargets = new List<CharacterInfo>();
     }
 
     public void GetTarget()
     {
         FindTargets();
-
-        if(characterInfo.targetList.Count > 0)
+        switch (aiType) 
         {
-            ChooseTarget();
-            chosenTile = characterInfo.FindBestTile(characterInfo.weaponList[chosenWeapon], chosenTarget);
-            chosenAction = ENEMY_ACTIONS.ATTACK;
+            case AI_TYPE.SEEKER:
+                if (validTargets.Count > 0)
+                {
+                    ChooseTarget();
+                    chosenTile = characterInfo.FindBestTile(characterInfo.weaponList[chosenWeapon], chosenTarget);
+                    chosenAction = ENEMY_ACTIONS.ATTACK;
+                }
+                else
+                {
+                    chosenTarget = FindNearestEnemy();
+                    chosenTile = FindClosestTile();
+                    chosenAction = ENEMY_ACTIONS.MOVE;
+                }
+                break;
+            case AI_TYPE.STANDARD:
+                if(characterInfo.targetList.Count > 0)
+                {
+                    ChooseTarget();
+                    chosenTile = characterInfo.FindBestTile(characterInfo.weaponList[chosenWeapon], chosenTarget);
+                    chosenAction = ENEMY_ACTIONS.ATTACK;
+                }
+                else
+                {
+                    chosenAction = ENEMY_ACTIONS.WAIT;
+                }
+                break;
+            case AI_TYPE.STATIONARY:
+                if(characterInfo.localTargets.Count > 0)
+                {
+                    ChooseTarget();
+                    chosenAction = ENEMY_ACTIONS.ATTACK;
+                }
+                else
+                {
+                    chosenAction = ENEMY_ACTIONS.WAIT;
+                }
+                break;
         }
-        else
-        {
-            chosenTarget = FindNearestEnemy();
-            chosenAction = ENEMY_ACTIONS.MOVE;
-        }
+        
     }
 
     private void FindTargets()
     {
         characterInfo.GetTargetList();
+        foreach(var target in characterInfo.targetList)
+        {
+            if (characterInfo.EvaluateIsEnemy(target))
+            {
+                validTargets.Add(target);
+            }
+        }
         characterInfo.RunDijsktras();
     }
 
@@ -44,20 +84,27 @@ public class StandardAI : MonoBehaviour
     {
         int currentBestScore = 0;
 
-        foreach(var target in characterInfo.targetList)
+        foreach(var target in validTargets)
         {
-            int i = 0;
-            while(characterInfo.weaponList[i] != null)
+            if (target.characterData.characterType != CHARACTER_TYPE.ENEMY)
             {
-                int newScore = 0;
-                newScore = EvaluateTarget(target, characterInfo.weaponList[i]);
-                if(newScore > currentBestScore)
+                int i = 0;
+                while (characterInfo.weaponList[i] != null)
                 {
-                    currentBestScore = newScore;
-                    chosenTarget = target;
-                    chosenWeapon = i;
+                    int newScore = 0;
+                    newScore = EvaluateTarget(target, characterInfo.weaponList[i]);
+                    if (newScore > currentBestScore)
+                    {
+                        currentBestScore = newScore;
+                        chosenTarget = target;
+                        chosenWeapon = i;
+                    }
+                    else if (newScore == currentBestScore)
+                    {
+                        chosenTarget = FindClosest(chosenTarget, target);
+                    }
+                    i++;
                 }
-                i++;
             }
         }
     }
@@ -137,6 +184,30 @@ public class StandardAI : MonoBehaviour
         }
     }
 
+    private TileInfo FindClosestTile()
+    {
+        Dijsktras dijsktras = new Dijsktras(WorldStateInfo.Instance.mapTileGraph);
+
+        dijsktras.DijsktrasAlogrithm(characterInfo.currentTile.index, characterInfo);
+
+        int currentTile = chosenTarget.currentTile.index;
+        Node nextTile;
+
+        while(dijsktras.parent[currentTile] != -1)
+        {
+            currentTile = dijsktras.parent[currentTile];
+            nextTile = characterInfo.subGraph.graphNodes.Find(x => x.nodeIndex == currentTile);
+            
+
+            if(nextTile != null && nextTile.colorType == COLOR_TYPE.MOVEMENT && !nextTile.tile.isOccupied)
+            {
+                return nextTile.tile;
+            }
+        }
+
+        return characterInfo.currentTile;
+    }
+
     private TileInfo EvaluateTileAtRange(int range, List<Node>tilesToEvaluate)
     {
         TileInfo chosenTile = null;
@@ -151,11 +222,19 @@ public class StandardAI : MonoBehaviour
         return chosenTile;
     }
 
+    private CharacterInfo FindClosest(CharacterInfo initialTarget, CharacterInfo compareTarget)
+    {
+        if (characterInfo.shortestPath.dist[initialTarget.currentTile.index] > characterInfo.shortestPath.dist[compareTarget.currentTile.index])
+            return compareTarget;
+
+        return initialTarget;
+    }
+
     private CharacterInfo FindNearestEnemy()
     {
         Dijsktras dijsktras = new Dijsktras(WorldStateInfo.Instance.mapTileGraph);
         List<CharacterInfo> playerCharacters = WorldStateInfo.Instance.battleController.GetPlayerUnits();
-        CharacterInfo closestCharacter = new CharacterInfo();
+        CharacterInfo closestCharacter = null;
 
         int closestTileIndex = int.MaxValue;
 
@@ -170,7 +249,7 @@ public class StandardAI : MonoBehaviour
             }
             else
             {
-                if(dijsktras.dist[closestTileIndex] < dijsktras.dist[enemy.currentTile.index])
+                if(dijsktras.dist[closestTileIndex] > dijsktras.dist[enemy.currentTile.index])
                 {
                     closestTileIndex = enemy.currentTile.index;
                     closestCharacter = enemy;

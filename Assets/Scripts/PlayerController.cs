@@ -19,8 +19,7 @@ public class PlayerController : MonoBehaviour
     private InputActionMap fieldBattleMap;
 
     private CharacterInfo selectedUnit;
-
-    [SerializeField]private bool controlsEnabled;
+       
 
     public TileInfo currentTile;
 
@@ -50,8 +49,6 @@ public class PlayerController : MonoBehaviour
         //controls.FieldBattle.Move.started += ctx => MovePlayer();
         //controls.FieldBattle.Select.canceled += _ => WorldStateInfo.Instance.battleController.SelectTile();
 
-
-        controlsEnabled = true;
     }
 
     private void OnEnable()
@@ -71,7 +68,7 @@ public class PlayerController : MonoBehaviour
     {
         Vector2 movement = inputValue.Get<Vector2>();
 
-        Debug.Log(moveAction.ReadValueAsObject());
+
 
         if (moveAction.ReadValueAsObject() != null)
             MovePlayer(movement);
@@ -122,16 +119,25 @@ public class PlayerController : MonoBehaviour
     //    }
     }
 
-    public void SwitchControlsEnabled()
-    {
-        controlsEnabled = !controlsEnabled;
-    }
+
 
     public void SwitchControlType(string actionMap)
     {        
         //playerInput.currentActionMap.Disable();
         playerInput.SwitchCurrentActionMap(actionMap);
         playerInput.actions.FindActionMap(actionMap).Enable();
+    }
+
+    public void ToggleControls()
+    {
+        if(playerInput.currentActionMap.enabled)
+        {
+            playerInput.currentActionMap.Disable();
+        }
+        else
+        {
+            playerInput.currentActionMap.Enable();
+        }
     }
 
     #region MOVEMENT
