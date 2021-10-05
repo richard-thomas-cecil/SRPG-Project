@@ -44,6 +44,14 @@
                     "expectedControlType": "Button",
                     "processors": "NormalizeVector2",
                     "interactions": "Press"
+                },
+                {
+                    "name": "OpenDetails",
+                    "type": "Button",
+                    "id": "c98a5e24-085a-48b3-b065-f4ec1574dafd",
+                    "expectedControlType": "Button",
+                    "processors": "NormalizeVector2",
+                    "interactions": "Press"
                 }
             ],
             "bindings": [
@@ -211,6 +219,17 @@
                     "action": "Back",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "9819ca75-ebd0-43fa-b9b2-f1998ce7496f",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Default",
+                    "action": "OpenDetails",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },
@@ -302,6 +321,14 @@
                     "name": "Back",
                     "type": "Button",
                     "id": "dede5e87-fd3d-45f6-b5e8-d4ba52da0077",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
+                    "name": "OpenDetails",
+                    "type": "Button",
+                    "id": "cb68b93a-fdf1-4fe2-9ea2-8f37c5fdeb64",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": ""
@@ -745,6 +772,17 @@
                     "processors": "",
                     "groups": "Default",
                     "action": "Back",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b02635cd-4e7e-49a1-ae67-db9126b0448b",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Default",
+                    "action": "OpenDetails",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

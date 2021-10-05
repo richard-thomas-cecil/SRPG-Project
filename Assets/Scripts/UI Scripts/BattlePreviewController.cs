@@ -55,7 +55,7 @@ public class BattlePreviewController : MonoBehaviour
 
         targetName.text = target.characterData.name;
         targetHP.text = target.characterData.HP_CURRENT.ToString();
-        if (targetWeapon != null)
+        if (targetWeapon != null && player.EvaluateIsEnemy(target))
         {
             targetDamage.text = targetAttack.ToString();
             targetHit.text = ((target.characterData.AIM + targetWeapon.HIT) - (player.characterData.DODGE + player.currentTile.dodgeBoost)).ToString();

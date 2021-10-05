@@ -16,6 +16,9 @@ public class HealthPanelController : MonoBehaviour
     private TextMeshProUGUI defenderHealthText;
     private GameObject defenderHealthPositive;
 
+    private GameObject damageBox;
+    private TextMeshProUGUI damageText;
+
     private CharacterInfo attacker;
     private CharacterInfo defender;
 
@@ -38,6 +41,9 @@ public class HealthPanelController : MonoBehaviour
         defenderHealthText = defenderPanel.transform.Find("HealthText").GetComponent<TextMeshProUGUI>();
         defenderHealthPositive = defenderPanel.transform.Find("HealthPositive").gameObject;
 
+        damageBox = transform.Find("DamageBox").gameObject;
+        damageText = damageBox.transform.Find("DamageText").gameObject.GetComponent<TextMeshProUGUI>();
+
         canvasRect = this.gameObject.GetComponent<RectTransform>();
 
         healthUpdateQueue = new Queue<int>();
@@ -45,6 +51,7 @@ public class HealthPanelController : MonoBehaviour
 
         attackerPanel.SetActive(false);
         defenderPanel.SetActive(false);
+        damageBox.gameObject.SetActive(false);
     }
 
     // Update is called once per frame
@@ -60,11 +67,11 @@ public class HealthPanelController : MonoBehaviour
 
         attackerName.text = attacker.characterData.CharacterName;
         attackerHealthText.text = attacker.characterData.HP_CURRENT + "/" + attacker.characterData.HP;
-        attackerHealthPositive.transform.localScale = new Vector3(attacker.characterData.HP_CURRENT / attacker.characterData.HP, attackerHealthPositive.transform.localScale.y, attackerHealthPositive.transform.localScale.z);
+        attackerHealthPositive.transform.localScale = new Vector3((float)((float)attacker.characterData.HP_CURRENT / (float)attacker.characterData.HP), attackerHealthPositive.transform.localScale.y, attackerHealthPositive.transform.localScale.z);
 
         defenderName.text = defender.characterData.CharacterName;
         defenderHealthText.text = defender.characterData.HP_CURRENT + "/" + defender.characterData.HP;
-        defenderHealthPositive.transform.localScale = new Vector3(defender.characterData.HP_CURRENT / defender.characterData.HP, defenderHealthPositive.transform.localScale.y, defenderHealthPositive.transform.localScale.z);
+        defenderHealthPositive.transform.localScale = new Vector3((float)((float)defender.characterData.HP_CURRENT / (float)defender.characterData.HP), defenderHealthPositive.transform.localScale.y, defenderHealthPositive.transform.localScale.z);
 
         PositionPanels();
 
@@ -75,27 +82,51 @@ public class HealthPanelController : MonoBehaviour
     public void AddToUpdateQueue(int toAdd, CharacterInfo characterToAdd)
     {
        healthUpdateQueue.Enqueue(toAdd);
-        characterUpdateQueue.Enqueue(characterToAdd);
+       characterUpdateQueue.Enqueue(characterToAdd);
     }
 
     public void UpdatePanel()
     {
         int toUpdate = healthUpdateQueue.Dequeue();
         CharacterInfo characterInfo = characterUpdateQueue.Dequeue();
+        
+        damageText.gameObject.GetComponent<Animator>().ResetTrigger("Play");
 
-        if (characterInfo = attacker)
+        if (characterInfo == attacker)
         {
             attackerName.text = attacker.characterData.CharacterName;
-            attackerHealthText.text = toUpdate + "/" + attacker.characterData.HP;
-            attackerHealthPositive.transform.localScale = new Vector3(toUpdate / attacker.characterData.HP, attackerHealthPositive.transform.localScale.y, attackerHealthPositive.transform.localScale.z);
+            attackerHealthText.text = attacker.GetHPCurrent() + "/" + attacker.characterData.HP;
+            attackerHealthPositive.transform.localScale = new Vector3((float)((float)attacker.GetHPCurrent() / (float)attacker.characterData.HP), attackerHealthPositive.transform.localScale.y, attackerHealthPositive.transform.localScale.z);
+            DamageTextMovement(toUpdate, characterInfo);
         }
 
-        else if (characterInfo = defender)
+        else if (characterInfo == defender)
         {
             defenderName.text = defender.characterData.CharacterName;
-            defenderHealthText.text = toUpdate + "/" + defender.characterData.HP;
-            defenderHealthPositive.transform.localScale = new Vector3(toUpdate / defender.characterData.HP, defenderHealthPositive.transform.localScale.y, defenderHealthPositive.transform.localScale.z);
+            defenderHealthText.text = defender.GetHPCurrent() + "/" + defender.characterData.HP;
+            defenderHealthPositive.transform.localScale = new Vector3((float)((float)defender.GetHPCurrent() / (float)defender.characterData.HP), defenderHealthPositive.transform.localScale.y, defenderHealthPositive.transform.localScale.z);
+            DamageTextMovement(toUpdate, characterInfo);
         }
+    }
+
+    private void DamageTextMovement(int damageValue, CharacterInfo defender)
+    {
+        Vector2 newDefenderPosition;
+        Vector2 viewPortPosDefender = Camera.main.WorldToViewportPoint(defender.gameObject.transform.position);
+        Vector2 unitSize = Camera.main.WorldToViewportPoint(new Vector2(1.1f, 1.1f));
+        newDefenderPosition = new Vector2(((viewPortPosDefender.x * canvasRect.sizeDelta.x) - (canvasRect.sizeDelta.x * 0.5f)), ((viewPortPosDefender.y * canvasRect.sizeDelta.y) - (canvasRect.sizeDelta.y * 0.5f) + ((unitSize.y * canvasRect.sizeDelta.y) - (canvasRect.sizeDelta.y * 0.5f))));
+
+        if (damageValue > 0)
+            damageText.text = damageValue.ToString();
+        else if (damageValue == 0)
+            damageText.text = "No Damage";
+        else
+            damageText.text = "Miss";
+
+        damageBox.gameObject.GetComponent<RectTransform>().localPosition = newDefenderPosition;
+        damageBox.gameObject.SetActive(true);
+
+        damageText.gameObject.GetComponent<Animator>().SetTrigger("Play");
     }
 
     private void PositionPanels()
@@ -110,8 +141,8 @@ public class HealthPanelController : MonoBehaviour
 
         Debug.Log(newDefenderPosition);
 
-        attackerPanel.gameObject.GetComponent<RectTransform>().localPosition = new Vector2(newAttackerPosition.x, newAttackerPosition.y);
-        defenderPanel.gameObject.GetComponent<RectTransform>().localPosition = new Vector2(newDefenderPosition.x, newDefenderPosition.y);
+        attackerPanel.gameObject.GetComponent<RectTransform>().anchoredPosition = new Vector2(newAttackerPosition.x, newAttackerPosition.y);
+        defenderPanel.gameObject.GetComponent<RectTransform>().anchoredPosition = new Vector2(newDefenderPosition.x, newDefenderPosition.y);
     }
 
     public void DisablePanel()

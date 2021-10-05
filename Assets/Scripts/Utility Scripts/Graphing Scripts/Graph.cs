@@ -323,6 +323,9 @@ public class Graph
         int[] distanceFromStart = new int[maxNodes];                                    //Distance from start keeps track of how far a node is away from the start(ie. the current tile of the unit), so that we know when to stop searching
         COLOR_TYPE[] nodeColor = new COLOR_TYPE[maxNodes];                              //Keeps track of how to color nodes based on distance from start
 
+        int supportMinRange = int.MaxValue;
+        int supportMaxRange = int.MinValue;
+
         bool[] markAsInRange = new bool[maxNodes];
 
         Node currentNodeBase = graphNodes.Find(x => x.nodeIndex == root);               //Find the node in the main graph that corresponds with the root tileIndex, and set it as the first node
@@ -339,6 +342,21 @@ public class Graph
             visited[i] = false;
             nodeColor[i] = COLOR_TYPE.NONE;
             distanceFromStart[i] = -1;
+        }
+
+        for(int i=0; i < currentCharacter.weaponList.Length; i++)
+        {
+            if(currentCharacter.weaponList[i] != null && currentCharacter.weaponList[i].damageType == DAMAGE_TYPE.SUPPORT)
+            {
+                if(currentCharacter.weaponList[i].MINRANGE < supportMinRange)
+                {
+                    supportMinRange = currentCharacter.weaponList[i].MINRANGE;
+                }
+                if (currentCharacter.weaponList[i].MAXRANGE > supportMaxRange)
+                {
+                    supportMaxRange = currentCharacter.weaponList[i].MAXRANGE;
+                }
+            }
         }
 
         //Queue up the root node, then set it to visited with a distance of 0
@@ -372,16 +390,21 @@ public class Graph
                             queue.Enqueue(graphNodes.Find(x => x.nodeIndex == v));
                         visited[v] = true;
 
+                        if(supportMinRange > 0)
+                        {
+                            currentNode.inSupportRange = true;
+                        }
 
                         //Due to priority of Node colors, we need to check and see if the current distance of tile of index v is greater than the current node + its distance to the next node
 
                         distanceFromStart[v] = FindMinDistance(distanceFromStart[v], distanceFromStart[currentIndex] + adjacencyMatrix[currentIndex, v]);
 
+                        TileInfo tileV = graphNodes.Find(x => x.nodeIndex == v).tile;
 
-                        //if (tileV.occupant != null && nodeColor[v] == COLOR_TYPE.MOVEMENT && EvaluateIsEnemy(currentCharacter, tileV.occupant))
-                        //{
-                        //    distanceFromStart[v] = moveableDistance + 1;
-                        //}
+                        if (tileV.occupant != null && EvaluateIsEnemy(currentCharacter, tileV.occupant))
+                        {
+                            distanceFromStart[v] = moveableDistance + 1;
+                        }
 
                         //if (distanceFromStart[v] > moveableDistance && graphNodes[currentIndex].tile.isOccupied && currentIndex != root && !currentCharacter.EvaluateIsEnemy(graphNodes[currentIndex].tile.occupant) && distanceFromStart[currentIndex] <= moveableDistance && (nodeColor[v] != COLOR_TYPE.ATTACK))
                         //{
@@ -433,9 +456,8 @@ public class Graph
 
                     }
                 }
-                subGraph.graphNodes.Add(currentNode);
             }
-            
+            subGraph.graphNodes.Add(currentNode);
         }
 
         int subGraphCount = subGraph.graphNodes.Count;
@@ -447,6 +469,8 @@ public class Graph
                 {
                     Node rangeNode = new Node(graphNodes[j].tile, j);
                     visited[j] = true;
+                    if (rangeTable[subGraph.graphNodes[i].nodeIndex, j] >= supportMinRange && rangeTable[subGraph.graphNodes[i].nodeIndex, j] <= supportMaxRange)
+                        rangeNode.inSupportRange = true;
                     subGraph.graphNodes.Add(rangeNode);
                     markAsInRange[j] = true;
                     distanceFromStart[j] = moveableDistance + rangeTable[subGraph.graphNodes[i].nodeIndex, j];
@@ -457,10 +481,12 @@ public class Graph
         foreach (var node in subGraph.graphNodes)
         {
             node.weight = distanceFromStart[node.nodeIndex];
-            if (node.weight <= moveableDistance)
+            if (node.weight <= moveableDistance && !currentCharacter.EvaluateIsEnemy(node.tile.occupant))
                 node.colorType = COLOR_TYPE.MOVEMENT;
-            else if (markAsInRange[node.nodeIndex])
+            else if (markAsInRange[node.nodeIndex] || currentCharacter.EvaluateIsEnemy(node.tile.occupant) || (node.weight >= moveableDistance + minRange && node.weight<= moveableDistance+maxRange))
                 node.colorType = COLOR_TYPE.ATTACK;
+            if (node.colorType == COLOR_TYPE.NONE && node.inSupportRange)
+                node.colorType = COLOR_TYPE.SUPPORT;
         }
 
 

@@ -14,6 +14,8 @@ public class TileInfo : MonoBehaviour
 
     public int index;
 
+    [SerializeField] private TILE_TYPE tileType;
+
     //Component References
     [HideInInspector]
     public BoxCollider2D bc2D;
@@ -34,6 +36,8 @@ public class TileInfo : MonoBehaviour
         renderer = GetComponent<SpriteRenderer>();
         transform = GetComponent<Transform>();
         isOccupied = false;
+
+        SetTileStats();
 
         SetSurroundingTiles();
     }
@@ -91,5 +95,30 @@ public class TileInfo : MonoBehaviour
         }
         else
             return null;
+    }
+
+    private void SetTileStats()
+    {
+        switch (tileType)
+        {
+            case TILE_TYPE.DEFAULT:
+                tileName = "Open Field";
+                movementCost = 1;
+                defBoost = 0;
+                dodgeBoost = 0;
+                break;
+            case TILE_TYPE.FOREST:
+                tileName = "Forest";
+                movementCost = 2;
+                defBoost = 1;
+                dodgeBoost = 10;
+                break;
+            default:
+                tileName = "Open Field";
+                movementCost = 1;
+                defBoost = 0;
+                dodgeBoost = 0;
+                break;
+        }
     }
 }

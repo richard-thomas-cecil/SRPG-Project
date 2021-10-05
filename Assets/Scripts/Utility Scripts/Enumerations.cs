@@ -58,7 +58,9 @@ public enum BattleState
     POST_COMBAT,
     CLEANUP,
     ANIMATING,
+    UNIT_DETAILS,
     WAIT,
+    BATTLE_OVER,
     DEFAULT
 }
 
@@ -88,4 +90,16 @@ public enum AI_TYPE
     SEEKER,
     STANDARD,
     STATIONARY
+}
+
+public enum TILE_TYPE
+{
+    DEFAULT,
+    FOREST
+}
+
+public enum RESULT_TYPE
+{
+    VICTORY,
+    DEFEAT
 }
