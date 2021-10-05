@@ -25,6 +25,9 @@ public class WorldStateInfo : MonoBehaviour
     public GameObject tileInfoPanel;
     public GameObject weaponInfoPanel;
     public GameObject healthPanel;
+    public GameObject unitWindow;
+    public GameObject unitDetailsWindow;
+    public GameObject resultScreen;
 
     public List<GameObject> UI_Prefabs;             //TBD
 
@@ -56,6 +59,9 @@ public class WorldStateInfo : MonoBehaviour
         tileInfoPanel = GameObject.Find("TileInfoCanvas");
         weaponInfoPanel = GameObject.Find("WeaponInfoCanvas");
         healthPanel = GameObject.Find("HealthCanvas");
+        unitWindow = GameObject.Find("UnitWindow");
+        unitDetailsWindow = GameObject.Find("UnitDetailsWindow");
+        resultScreen = GameObject.Find("ResultScreen");
     }
 
     // Start is called before the first frame update

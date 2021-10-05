@@ -81,9 +81,15 @@
     <Compile Include="Assets\Scripts\UI Scripts\BattlePreviewController.cs" />
     <Compile Include="Assets\Scripts\UI Scripts\ButtonInfo.cs" />
     <Compile Include="Assets\Scripts\UI Scripts\HealthPanelController.cs" />
+    <Compile Include="Assets\Scripts\UI Scripts\ResultsScreenController.cs" />
+    <Compile Include="Assets\Scripts\UI Scripts\Start Menu\CreditsButtonController.cs" />
+    <Compile Include="Assets\Scripts\UI Scripts\Start Menu\StartMenuController.cs" />
     <Compile Include="Assets\Scripts\UI Scripts\TargetButtonInfo.cs" />
     <Compile Include="Assets\Scripts\UI Scripts\TileInfoController.cs" />
+    <Compile Include="Assets\Scripts\UI Scripts\UnitDetailsWindow.cs" />
+    <Compile Include="Assets\Scripts\UI Scripts\UnitDetailsWindowController.cs" />
     <Compile Include="Assets\Scripts\UI Scripts\UnitInfoController.cs" />
+    <Compile Include="Assets\Scripts\UI Scripts\UnitWindowController.cs" />
     <Compile Include="Assets\Scripts\UI Scripts\WeaponButtonInfo.cs" />
     <Compile Include="Assets\Scripts\UI Scripts\WeaponInfoController.cs" />
     <Compile Include="Assets\Scripts\Utility Scripts\CreateTiles.cs" />

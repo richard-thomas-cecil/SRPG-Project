@@ -65,7 +65,6 @@ public class BattleAnimationController : MonoBehaviour
     {
         float sqrRemainingDistance = (rigidBody2D.transform.position - end).sqrMagnitude;
 
-        Debug.Log(Mathf.Approximately(sqrRemainingDistance, 0.0f));
 
         while (sqrRemainingDistance >= 0.000001)
         {

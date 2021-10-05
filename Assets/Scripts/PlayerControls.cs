@@ -57,6 +57,14 @@ public class @PlayerControls : IInputActionCollection, IDisposable
                     ""expectedControlType"": ""Button"",
                     ""processors"": ""NormalizeVector2"",
                     ""interactions"": ""Press""
+                },
+                {
+                    ""name"": ""OpenDetails"",
+                    ""type"": ""Button"",
+                    ""id"": ""c98a5e24-085a-48b3-b065-f4ec1574dafd"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": ""NormalizeVector2"",
+                    ""interactions"": ""Press""
                 }
             ],
             ""bindings"": [
@@ -224,6 +232,17 @@ public class @PlayerControls : IInputActionCollection, IDisposable
                     ""action"": ""Back"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""9819ca75-ebd0-43fa-b9b2-f1998ce7496f"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Default"",
+                    ""action"": ""OpenDetails"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -315,6 +334,14 @@ public class @PlayerControls : IInputActionCollection, IDisposable
                     ""name"": ""Back"",
                     ""type"": ""Button"",
                     ""id"": ""dede5e87-fd3d-45f6-b5e8-d4ba52da0077"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
+                },
+                {
+                    ""name"": ""OpenDetails"",
+                    ""type"": ""Button"",
+                    ""id"": ""cb68b93a-fdf1-4fe2-9ea2-8f37c5fdeb64"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """"
@@ -760,6 +787,17 @@ public class @PlayerControls : IInputActionCollection, IDisposable
                     ""action"": ""Back"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b02635cd-4e7e-49a1-ae67-db9126b0448b"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Default"",
+                    ""action"": ""OpenDetails"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -785,6 +823,7 @@ public class @PlayerControls : IInputActionCollection, IDisposable
         m_FieldBattle_Select = m_FieldBattle.FindAction("Select", throwIfNotFound: true);
         m_FieldBattle_Move = m_FieldBattle.FindAction("Move", throwIfNotFound: true);
         m_FieldBattle_Back = m_FieldBattle.FindAction("Back", throwIfNotFound: true);
+        m_FieldBattle_OpenDetails = m_FieldBattle.FindAction("OpenDetails", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -798,6 +837,7 @@ public class @PlayerControls : IInputActionCollection, IDisposable
         m_UI_TrackedDevicePosition = m_UI.FindAction("TrackedDevicePosition", throwIfNotFound: true);
         m_UI_TrackedDeviceOrientation = m_UI.FindAction("TrackedDeviceOrientation", throwIfNotFound: true);
         m_UI_Back = m_UI.FindAction("Back", throwIfNotFound: true);
+        m_UI_OpenDetails = m_UI.FindAction("OpenDetails", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -852,6 +892,7 @@ public class @PlayerControls : IInputActionCollection, IDisposable
     private readonly InputAction m_FieldBattle_Select;
     private readonly InputAction m_FieldBattle_Move;
     private readonly InputAction m_FieldBattle_Back;
+    private readonly InputAction m_FieldBattle_OpenDetails;
     public struct FieldBattleActions
     {
         private @PlayerControls m_Wrapper;
@@ -861,6 +902,7 @@ public class @PlayerControls : IInputActionCollection, IDisposable
         public InputAction @Select => m_Wrapper.m_FieldBattle_Select;
         public InputAction @Move => m_Wrapper.m_FieldBattle_Move;
         public InputAction @Back => m_Wrapper.m_FieldBattle_Back;
+        public InputAction @OpenDetails => m_Wrapper.m_FieldBattle_OpenDetails;
         public InputActionMap Get() { return m_Wrapper.m_FieldBattle; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -885,6 +927,9 @@ public class @PlayerControls : IInputActionCollection, IDisposable
                 @Back.started -= m_Wrapper.m_FieldBattleActionsCallbackInterface.OnBack;
                 @Back.performed -= m_Wrapper.m_FieldBattleActionsCallbackInterface.OnBack;
                 @Back.canceled -= m_Wrapper.m_FieldBattleActionsCallbackInterface.OnBack;
+                @OpenDetails.started -= m_Wrapper.m_FieldBattleActionsCallbackInterface.OnOpenDetails;
+                @OpenDetails.performed -= m_Wrapper.m_FieldBattleActionsCallbackInterface.OnOpenDetails;
+                @OpenDetails.canceled -= m_Wrapper.m_FieldBattleActionsCallbackInterface.OnOpenDetails;
             }
             m_Wrapper.m_FieldBattleActionsCallbackInterface = instance;
             if (instance != null)
@@ -904,6 +949,9 @@ public class @PlayerControls : IInputActionCollection, IDisposable
                 @Back.started += instance.OnBack;
                 @Back.performed += instance.OnBack;
                 @Back.canceled += instance.OnBack;
+                @OpenDetails.started += instance.OnOpenDetails;
+                @OpenDetails.performed += instance.OnOpenDetails;
+                @OpenDetails.canceled += instance.OnOpenDetails;
             }
         }
     }
@@ -923,6 +971,7 @@ public class @PlayerControls : IInputActionCollection, IDisposable
     private readonly InputAction m_UI_TrackedDevicePosition;
     private readonly InputAction m_UI_TrackedDeviceOrientation;
     private readonly InputAction m_UI_Back;
+    private readonly InputAction m_UI_OpenDetails;
     public struct UIActions
     {
         private @PlayerControls m_Wrapper;
@@ -938,6 +987,7 @@ public class @PlayerControls : IInputActionCollection, IDisposable
         public InputAction @TrackedDevicePosition => m_Wrapper.m_UI_TrackedDevicePosition;
         public InputAction @TrackedDeviceOrientation => m_Wrapper.m_UI_TrackedDeviceOrientation;
         public InputAction @Back => m_Wrapper.m_UI_Back;
+        public InputAction @OpenDetails => m_Wrapper.m_UI_OpenDetails;
         public InputActionMap Get() { return m_Wrapper.m_UI; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -980,6 +1030,9 @@ public class @PlayerControls : IInputActionCollection, IDisposable
                 @Back.started -= m_Wrapper.m_UIActionsCallbackInterface.OnBack;
                 @Back.performed -= m_Wrapper.m_UIActionsCallbackInterface.OnBack;
                 @Back.canceled -= m_Wrapper.m_UIActionsCallbackInterface.OnBack;
+                @OpenDetails.started -= m_Wrapper.m_UIActionsCallbackInterface.OnOpenDetails;
+                @OpenDetails.performed -= m_Wrapper.m_UIActionsCallbackInterface.OnOpenDetails;
+                @OpenDetails.canceled -= m_Wrapper.m_UIActionsCallbackInterface.OnOpenDetails;
             }
             m_Wrapper.m_UIActionsCallbackInterface = instance;
             if (instance != null)
@@ -1017,6 +1070,9 @@ public class @PlayerControls : IInputActionCollection, IDisposable
                 @Back.started += instance.OnBack;
                 @Back.performed += instance.OnBack;
                 @Back.canceled += instance.OnBack;
+                @OpenDetails.started += instance.OnOpenDetails;
+                @OpenDetails.performed += instance.OnOpenDetails;
+                @OpenDetails.canceled += instance.OnOpenDetails;
             }
         }
     }
@@ -1037,6 +1093,7 @@ public class @PlayerControls : IInputActionCollection, IDisposable
         void OnSelect(InputAction.CallbackContext context);
         void OnMove(InputAction.CallbackContext context);
         void OnBack(InputAction.CallbackContext context);
+        void OnOpenDetails(InputAction.CallbackContext context);
     }
     public interface IUIActions
     {
@@ -1051,5 +1108,6 @@ public class @PlayerControls : IInputActionCollection, IDisposable
         void OnTrackedDevicePosition(InputAction.CallbackContext context);
         void OnTrackedDeviceOrientation(InputAction.CallbackContext context);
         void OnBack(InputAction.CallbackContext context);
+        void OnOpenDetails(InputAction.CallbackContext context);
     }
 }

@@ -68,8 +68,6 @@ public class PlayerController : MonoBehaviour
     {
         Vector2 movement = inputValue.Get<Vector2>();
 
-
-
         if (moveAction.ReadValueAsObject() != null)
             MovePlayer(movement);
     }
@@ -84,6 +82,10 @@ public class PlayerController : MonoBehaviour
         WorldStateInfo.Instance.battleController.ReverseBattleState();
     }
 
+    public void OnOpenDetails()
+    {
+        WorldStateInfo.Instance.battleController.OpenUnitDetails();
+    }
     //public void OnCancel()
     //{
     //    WorldStateInfo.Instance.battleController.ReverseBattleState();
@@ -280,6 +282,8 @@ public class PlayerController : MonoBehaviour
     {
         StartCoroutine(SmoothMovement(newPosition, speed));
     }
+
+    
 
     private IEnumerator SmoothMovement(Vector3 end, float speed = .25f)
     {

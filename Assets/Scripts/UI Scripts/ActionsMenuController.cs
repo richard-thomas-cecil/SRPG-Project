@@ -107,6 +107,7 @@ public class ActionsMenuController : MonoBehaviour
                     button.button.onClick.AddListener(WorldStateInfo.Instance.battleController.InventoryAction);
                     break;
                 case ACTION_BUTTON_LIST.UNITS:
+                    button.button.onClick.AddListener(WorldStateInfo.Instance.battleController.UnitsAction);
                     break;
                 case ACTION_BUTTON_LIST.OBJECTIVE:
                     break;
@@ -216,6 +217,14 @@ public class ActionsMenuController : MonoBehaviour
             {
                 navigation.selectOnDown = panel.transform.GetChild(i + 1).GetComponent<Button>();
             }
+            if(i == 0)
+            {
+                navigation.selectOnUp = panel.transform.GetChild(panel.transform.childCount - 1).GetComponent<Button>();
+            }
+            if(i == panel.transform.childCount - 1)
+            {
+                navigation.selectOnDown = panel.transform.GetChild(0).GetComponent<Button>();
+            }
             panel.transform.GetChild(i).GetComponent<Button>().navigation = navigation;
         }
     }
@@ -231,26 +240,28 @@ public class ActionsMenuController : MonoBehaviour
 
     #region ITEM_PANEL
 
-    public void CreateItemPanel(WeaponData[] weapons, ItemData[] items, ACTION_BUTTON_LIST action)
+    public void CreateItemPanel(WeaponData[] weapons, ItemData[] items, ACTION_BUTTON_LIST action, CharacterInfo selectedCharacter)
     {
         int i = 0;
         while(weapons[i] != null)
         {
-            GameObject newWeapon = Instantiate(weaponButtonPrefab);
-            Button weaponButton = newWeapon.GetComponent<Button>();
+            if (((weapons[i].damageType != DAMAGE_TYPE.SUPPORT && selectedCharacter.canUseAttackWeapon) || (weapons[i].damageType == DAMAGE_TYPE.SUPPORT && selectedCharacter.canUseSupportWeapon)) || action == ACTION_BUTTON_LIST.INVENTORY)
+            {
+                GameObject newWeapon = Instantiate(weaponButtonPrefab);
+                Button weaponButton = newWeapon.GetComponent<Button>();
 
-            newWeapon.name = weapons[i].weaponName;
+                newWeapon.name = weapons[i].weaponName;
 
-            newWeapon.GetComponentInChildren<TextMeshProUGUI>().text = weapons[i].weaponName;
+                newWeapon.GetComponentInChildren<TextMeshProUGUI>().text = weapons[i].weaponName;
 
-            newWeapon.GetComponent<WeaponButtonInfo>().SetWeapon(weapons[i]);
+                newWeapon.GetComponent<WeaponButtonInfo>().SetWeapon(weapons[i]);
 
-            newWeapon.transform.SetParent(itemPanel.transform, false);
+                newWeapon.transform.SetParent(itemPanel.transform, false);
 
-            newWeapon.GetComponent<RectTransform>().sizeDelta = new Vector2(itemPanel.GetComponent<RectTransform>().rect.width, newWeapon.GetComponent<RectTransform>().rect.height);
-            
-            SetWeaponButtonListener(weapons[i], weaponButton, action);
-            
+                newWeapon.GetComponent<RectTransform>().sizeDelta = new Vector2(itemPanel.GetComponent<RectTransform>().rect.width, newWeapon.GetComponent<RectTransform>().rect.height);
+
+                SetWeaponButtonListener(weapons[i], weaponButton, action);
+            }
             i++;
         }
 
@@ -286,6 +297,67 @@ public class ActionsMenuController : MonoBehaviour
         EventSystem.current.SetSelectedGameObject(itemPanel.transform.GetChild(0).gameObject);
     }
 
+    public void RebuildItemMenu(WeaponData[] weapons, ItemData[] items, ACTION_BUTTON_LIST action, CharacterInfo selectedCharacter)
+    {
+        for(int j = 0; j < itemPanel.transform.childCount; j++)
+        {           
+            Object.Destroy(itemPanel.transform.GetChild(j).gameObject);
+            
+        }
+
+        itemPanel.transform.DetachChildren();
+
+        int i = 0;
+        while (weapons[i] != null)
+        {
+            if (((weapons[i].damageType != DAMAGE_TYPE.SUPPORT && selectedCharacter.canUseAttackWeapon) || (weapons[i].damageType == DAMAGE_TYPE.SUPPORT && selectedCharacter.canUseSupportWeapon)) || action == ACTION_BUTTON_LIST.INVENTORY)
+            {
+                GameObject newWeapon = Instantiate(weaponButtonPrefab);
+                Button weaponButton = newWeapon.GetComponent<Button>();
+
+                newWeapon.name = weapons[i].weaponName;
+
+                newWeapon.GetComponentInChildren<TextMeshProUGUI>().text = weapons[i].weaponName;
+
+                newWeapon.GetComponent<WeaponButtonInfo>().SetWeapon(weapons[i]);
+
+                newWeapon.transform.SetParent(itemPanel.transform, false);
+
+                newWeapon.GetComponent<RectTransform>().sizeDelta = new Vector2(itemPanel.GetComponent<RectTransform>().rect.width, newWeapon.GetComponent<RectTransform>().rect.height);
+
+                SetWeaponButtonListener(weapons[i], weaponButton, action);
+            }
+            i++;
+        }
+
+        i = 0;
+
+        if (action == ACTION_BUTTON_LIST.INVENTORY)
+        {
+            while (items[i] != null)
+            {
+                GameObject newItem = Instantiate(itemButtonPrefab);
+                Button itemButton = newItem.GetComponent<Button>();
+
+                newItem.name = items[i].itemName;
+
+                newItem.GetComponentInChildren<TextMeshProUGUI>().text = items[i].itemName;
+
+                newItem.transform.SetParent(itemPanel.transform, false);
+
+                i++;
+            }
+        }
+        SetPanelNavigation(itemPanel);
+
+        ResizeMenuPanel(itemPanel);
+
+        itemPanel.SetActive(true);
+
+        EventSystem.current.SetSelectedGameObject(null);
+        EventSystem.current.SetSelectedGameObject(itemPanel.transform.GetChild(0).gameObject);
+    }
+
     private void SetWeaponButtonListener(WeaponData weaponData, Button weaponButton, ACTION_BUTTON_LIST action)
     {
         if (action == ACTION_BUTTON_LIST.ATTACK)
@@ -301,17 +373,33 @@ public class ActionsMenuController : MonoBehaviour
     {
         confirmButton.gameObject.SetActive(false);
         GameObject equipButton = GameObject.Instantiate(itemButtonPrefab);
+        Button equip = equipButton.GetComponent<Button>();
 
         equipButton.transform.SetParent(itemActionPanel.transform, false);
         equipButton.transform.SetAsFirstSibling();
 
+        equipButton.transform.Find("ActionText").gameObject.GetComponent<TextMeshProUGUI>().text = "Equip";
+
         equipButton.GetComponent<RectTransform>().sizeDelta = new Vector2(itemActionPanel.GetComponent<RectTransform>().rect.width, equipButton.GetComponent<RectTransform>().rect.height);
 
-        equipButton.GetComponent<Button>().onClick.AddListener(delegate { WorldStateInfo.Instance.battleController.EquipWeapon(weapon); });
+        equip.onClick.AddListener(delegate { WorldStateInfo.Instance.battleController.EquipWeapon(weapon); });
         itemActionPanel.SetActive(true);
 
+        Navigation navigation = new Navigation();
+        navigation.mode = Navigation.Mode.Explicit;
+
+        navigation.selectOnDown = backButton;
+        navigation.selectOnUp = backButton;
+
+        equip.navigation = navigation;
+
+        navigation.selectOnDown = equip;
+        navigation.selectOnUp = equip;
+
+        backButton.navigation = navigation;
+
         ResizeMenuPanel(itemActionPanel);
-        SetPanelNavigation(itemActionPanel);
+        //SetPanelNavigation(itemActionPanel);
 
         previousButtonsPressed.Push(EventSystem.current.currentSelectedGameObject);
 
@@ -324,19 +412,33 @@ public class ActionsMenuController : MonoBehaviour
 
     }
 
-    public void CreateTargetList(List<CharacterInfo> targets, WeaponData selectedWeapon)
+    public void CreateTargetList(List<CharacterInfo> targets, WeaponData selectedWeapon, CharacterInfo selectedCharacter)
     {
         foreach(var target in targets)
         {
-            GameObject newTarget = Instantiate(targetButtonPrefab);
-            Button targetButton = newTarget.GetComponent<Button>();
+            if (selectedWeapon.damageType != DAMAGE_TYPE.SUPPORT && selectedCharacter.EvaluateIsEnemy(target))
+            {
+                GameObject newTarget = Instantiate(targetButtonPrefab);
+                Button targetButton = newTarget.GetComponent<Button>();
 
-            newTarget.GetComponent<TargetButtonInfo>().SetButtonInfo(target, selectedWeapon);
+                newTarget.GetComponent<TargetButtonInfo>().SetButtonInfo(target, selectedWeapon);
 
 
-            targetButton.onClick.AddListener(delegate { WorldStateInfo.Instance.battleController.ProcessAttack(target, selectedWeapon); });
-            
-            newTarget.transform.SetParent(targetPanel.transform, false);
+                targetButton.onClick.AddListener(delegate { WorldStateInfo.Instance.battleController.ProcessAttack(target, selectedWeapon); });
+
+                newTarget.transform.SetParent(targetPanel.transform, false);
+            }
+            else if(selectedWeapon.damageType == DAMAGE_TYPE.SUPPORT && !selectedCharacter.EvaluateIsEnemy(target))
+            {
+                GameObject newTarget = Instantiate(targetButtonPrefab);
+                Button targetButton = newTarget.GetComponent<Button>();
+
+                newTarget.GetComponent<TargetButtonInfo>().SetButtonInfo(target, selectedWeapon);
+
+                targetButton.onClick.AddListener(delegate { WorldStateInfo.Instance.battleController.ProcessHeal(target, selectedWeapon); });
+
+                newTarget.transform.SetParent(targetPanel.transform, false);
+            }
         }
 
         SetPanelNavigation(targetPanel);

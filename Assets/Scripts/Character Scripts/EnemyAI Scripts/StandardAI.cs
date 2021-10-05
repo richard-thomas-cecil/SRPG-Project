@@ -24,6 +24,7 @@ public class StandardAI : MonoBehaviour
     public void GetTarget()
     {
         FindTargets();
+       
         switch (aiType) 
         {
             case AI_TYPE.SEEKER:
@@ -31,7 +32,16 @@ public class StandardAI : MonoBehaviour
                 {
                     ChooseTarget();
                     chosenTile = characterInfo.FindBestTile(characterInfo.weaponList[chosenWeapon], chosenTarget);
-                    chosenAction = ENEMY_ACTIONS.ATTACK;
+                    if (chosenTile != null)
+                    {
+                        chosenAction = ENEMY_ACTIONS.ATTACK;
+                        characterInfo.ChangeWeapon(characterInfo.weaponList[chosenWeapon]);
+                    }
+                    else
+                    {
+                        chosenTile = FindClosestTile();
+                        chosenAction = ENEMY_ACTIONS.MOVE;
+                    }
                 }
                 else
                 {
@@ -84,12 +94,40 @@ public class StandardAI : MonoBehaviour
     {
         int currentBestScore = 0;
 
-        foreach(var target in validTargets)
+        //foreach(var target in validTargets)
+        //{
+        //    if (target.characterData.characterType != CHARACTER_TYPE.ENEMY)
+        //    {
+        //        int i = 0;
+        //        while (characterInfo.weaponList[i] != null)
+        //        {
+        //            int newScore = 0;
+        //            Graph weaponSubgraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(characterInfo.currentTile.index, 0, characterInfo.weaponList[i].MINRANGE, characterInfo.weaponList[i].MAXRANGE, characterInfo);
+        //            newScore = EvaluateTarget(target, characterInfo.weaponList[i]);
+        //            if (newScore > currentBestScore)
+        //            {
+        //                currentBestScore = newScore;
+        //                chosenTarget = target;
+        //                chosenWeapon = i;
+        //            }
+        //            else if (newScore == currentBestScore)
+        //            {
+        //                chosenTarget = FindClosest(chosenTarget, target);
+        //            }
+        //            i++;
+        //        }
+        //    }
+        //}
+        int i = 0;
+        while (characterInfo.weaponList[i])
         {
-            if (target.characterData.characterType != CHARACTER_TYPE.ENEMY)
+            List<CharacterInfo> weaponTargets = new List<CharacterInfo>();
+
+            weaponTargets.AddRange(FindTargetsInWeaponSubGraph(i));
+
+            foreach(var target in validTargets)
             {
-                int i = 0;
-                while (characterInfo.weaponList[i] != null)
+                if(target.characterData.characterType != CHARACTER_TYPE.ENEMY && weaponTargets.Exists(x=>x == target))
                 {
                     int newScore = 0;
                     newScore = EvaluateTarget(target, characterInfo.weaponList[i]);
@@ -103,24 +141,32 @@ public class StandardAI : MonoBehaviour
                     {
                         chosenTarget = FindClosest(chosenTarget, target);
                     }
-                    i++;
                 }
             }
+
+            i++;
         }
     }
 
     private int EvaluateTarget(CharacterInfo target, WeaponData weapon)
     {
         int targetScore = 0;
-
-        targetScore = EvaluateDamage(target, weapon);
-
-        if (targetScore < 0)
-            targetScore = 0;
-
-        if(weapon.MAXRANGE > target.weaponList[0].MAXRANGE)
+        //only evaluate if the target is in range of character with the weapon being evaluated
+        if (!target.flagIsDead && characterInfo.shortestPath.tileDist[target.currentTile.index] <= characterInfo.GetMOVE() + weapon.MAXRANGE)
         {
-            targetScore = targetScore * 2;
+            targetScore = EvaluateDamage(target, weapon);
+
+            if (targetScore < 0)
+                targetScore = 0;
+
+            if (weapon.MAXRANGE > target.weaponList[0].MAXRANGE)
+            {
+                targetScore = targetScore * 2;
+            }
+        }
+        else if (target.flagIsDead)
+        {
+            targetScore = int.MinValue;
         }
 
         return targetScore;
@@ -158,6 +204,25 @@ public class StandardAI : MonoBehaviour
         return damage;
     }
 
+    private IEnumerable<CharacterInfo> FindTargetsInWeaponSubGraph(int weaponIndex)
+    {
+        List<CharacterInfo> targets = new List<CharacterInfo>();
+        Graph weaponSubgraph = WorldStateInfo.Instance.mapTileGraph.BuildSubGraph(characterInfo.currentTile.index, characterInfo.GetMOVE(), characterInfo.weaponList[weaponIndex].MINRANGE, characterInfo.weaponList[weaponIndex].MAXRANGE, characterInfo);
+
+        foreach(var tile in weaponSubgraph.graphNodes)
+        {
+            if (tile.tile.isOccupied)
+            {
+                if (characterInfo.EvaluateIsEnemy(tile.tile.occupant) && (tile.colorType == COLOR_TYPE.MOVEMENT || tile.colorType == COLOR_TYPE.ATTACK))
+                {
+                    targets.Add(tile.tile.occupant);
+                }
+            }
+        }
+
+        return targets;
+    }
+
     private void FindBestTile()
     {
         Dijsktras dijsktras = new Dijsktras(WorldStateInfo.Instance.mapTileGraph);
@@ -188,24 +253,39 @@ public class StandardAI : MonoBehaviour
     {
         Dijsktras dijsktras = new Dijsktras(WorldStateInfo.Instance.mapTileGraph);
 
-        dijsktras.DijsktrasAlogrithm(characterInfo.currentTile.index, characterInfo);
+        dijsktras.DijsktrasAlogrithm(chosenTarget.currentTile.index, characterInfo);
 
         int currentTile = chosenTarget.currentTile.index;
-        Node nextTile;
 
-        while(dijsktras.parent[currentTile] != -1)
-        {
-            currentTile = dijsktras.parent[currentTile];
-            nextTile = characterInfo.subGraph.graphNodes.Find(x => x.nodeIndex == currentTile);
+        int currentDistance = dijsktras.dist[characterInfo.currentTile.index];
+
+        Node nextTile = null;
+
+        //while(dijsktras.parent[currentTile] != -1)
+        //{
+        //    currentTile = dijsktras.parent[currentTile];
+        //    nextTile = characterInfo.subGraph.graphNodes.Find(x => x.nodeIndex == currentTile);
             
 
-            if(nextTile != null && nextTile.colorType == COLOR_TYPE.MOVEMENT && !nextTile.tile.isOccupied)
+        //    if(nextTile != null && nextTile.colorType == COLOR_TYPE.MOVEMENT && !nextTile.tile.isOccupied)
+        //    {
+        //        return nextTile.tile;
+        //    }
+        //}
+
+        foreach(var tile in characterInfo.subGraph.graphNodes)
+        {
+            if(tile.colorType == COLOR_TYPE.MOVEMENT && dijsktras.dist[tile.tile.index] < currentDistance && !tile.tile.isOccupied)
             {
-                return nextTile.tile;
+                nextTile = tile;
+                currentDistance = dijsktras.dist[tile.tile.index];
             }
         }
 
-        return characterInfo.currentTile;
+        if (nextTile == null)
+            nextTile = characterInfo.subGraph.graphNodes[0];
+
+        return nextTile.tile;
     }
 
     private TileInfo EvaluateTileAtRange(int range, List<Node>tilesToEvaluate)
