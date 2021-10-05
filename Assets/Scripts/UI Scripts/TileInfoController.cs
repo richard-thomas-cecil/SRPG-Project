@@ -37,5 +37,15 @@ public class TileInfoController : MonoBehaviour
         tileType.text = currentTile.tileName;
         defenseBonus.text = "Defense: " + currentTile.defBoost.ToString();
         avoidBonus.text = "Dodge: " + currentTile.dodgeBoost.ToString();
+
+        if (!gameObject.activeInHierarchy)
+        {
+            gameObject.SetActive(true);
+        }
+    }
+
+    public void DisablePanel()
+    {
+        gameObject.SetActive(false);
     }
 }

@@ -21,12 +21,14 @@ public class Node
     public bool visited;
     public int nodeIndex;
     public int weight;
+    public bool inSupportRange;
 
     public Node(TileInfo thisTile, int thisIndex)
     {
         tile = thisTile.GetComponent<TileInfo>();
         nodeIndex = thisIndex;
         colorType = COLOR_TYPE.NONE;
+        inSupportRange = false;
     }
 
     public void MarkVisited()

@@ -7,6 +7,7 @@ public class WeaponButtonInfo : MonoBehaviour, ISelectHandler, IDeselectHandler
 {
     private WeaponData weapon;
 
+
     public void OnSelect(BaseEventData eventData)
     {
         WorldStateInfo.Instance.battleController.SetWeaponInfoPanel(weapon, eventData.selectedObject);

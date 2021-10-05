@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f5828e31a8a10c545a2ce15d7a7bbcd6, type: 3}
   m_Name: Test Weapon
   m_EditorClassIdentifier: 
-  weaponName: TestWeapon
+  weaponName: Basic Gun
   damageType: 0
   isRanged: 1
   ATK: 1
-  HIT: 60
+  HIT: 70
   CRIT: 0
-  AMMO: 0
-  AMMO_CURRENT: 0
+  AMMO: 40
+  AMMO_CURRENT: 40
   MINRANGE: 1
   MAXRANGE: 2
