@@ -9,7 +9,7 @@ public class ButtonInfo : MonoBehaviour
     public Button button;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         button = this.GetComponent<Button> ();
     }

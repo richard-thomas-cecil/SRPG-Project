@@ -19,22 +19,6 @@ public class @PlayerControls : IInputActionCollection, IDisposable
             ""id"": ""4e61b4d5-d6e0-4706-bbcf-d10dcd21d037"",
             ""actions"": [
                 {
-                    ""name"": ""Horizontal"",
-                    ""type"": ""PassThrough"",
-                    ""id"": ""c9ed3ab4-3234-4d53-8ac5-fcff0738eae4"",
-                    ""expectedControlType"": ""Analog"",
-                    ""processors"": """",
-                    ""interactions"": ""Hold""
-                },
-                {
-                    ""name"": ""Vertical"",
-                    ""type"": ""PassThrough"",
-                    ""id"": ""48b6c93b-aae5-44f6-92d6-5cc55b59c71f"",
-                    ""expectedControlType"": ""Button"",
-                    ""processors"": """",
-                    ""interactions"": """"
-                },
-                {
                     ""name"": ""Select"",
                     ""type"": ""Button"",
                     ""id"": ""1085b930-d8ad-433e-a5a1-8ba66beed14a"",
@@ -47,8 +31,8 @@ public class @PlayerControls : IInputActionCollection, IDisposable
                     ""type"": ""Value"",
                     ""id"": ""5d58cbaa-386b-4d38-af6e-b7415949c41b"",
                     ""expectedControlType"": ""Vector2"",
-                    ""processors"": ""NormalizeVector2"",
-                    ""interactions"": ""Press""
+                    ""processors"": """",
+                    ""interactions"": """"
                 },
                 {
                     ""name"": ""Back"",
@@ -70,94 +54,6 @@ public class @PlayerControls : IInputActionCollection, IDisposable
             ""bindings"": [
                 {
                     ""name"": """",
-                    ""id"": ""5016a5ef-434e-4223-8c39-aa50ee7fef69"",
-                    ""path"": """",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Horizontal"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": ""Horizontal"",
-                    ""id"": ""039dfb66-29fc-467d-90aa-7f282f2f839f"",
-                    ""path"": ""1DAxis"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Horizontal"",
-                    ""isComposite"": true,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": ""Negative"",
-                    ""id"": ""e5580218-bea2-4a7b-8aac-866437247ac5"",
-                    ""path"": ""<Keyboard>/a"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Horizontal"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": true
-                },
-                {
-                    ""name"": ""Positive"",
-                    ""id"": ""5c4303b8-c158-4db0-b8cb-93cc4e123f11"",
-                    ""path"": ""<Keyboard>/d"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Horizontal"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": true
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""90dec313-d349-4240-9b34-8f42c17b453e"",
-                    ""path"": """",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Vertical"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": ""1D Axis"",
-                    ""id"": ""f66012d2-b4f7-4320-8d31-0fe2d1808dd7"",
-                    ""path"": ""1DAxis"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Vertical"",
-                    ""isComposite"": true,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": ""negative"",
-                    ""id"": ""c5fbe37c-e7b5-49b8-bcea-a2524242191c"",
-                    ""path"": ""<Keyboard>/s"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Vertical"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": true
-                },
-                {
-                    ""name"": ""positive"",
-                    ""id"": ""8308c988-0af5-4bfc-bd66-b0e13a568eb0"",
-                    ""path"": ""<Keyboard>/w"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Vertical"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": true
-                },
-                {
-                    ""name"": """",
                     ""id"": ""c95fa7bb-5325-4675-ad5a-a74f8dee56eb"",
                     ""path"": ""<Keyboard>/space"",
                     ""interactions"": """",
@@ -170,8 +66,8 @@ public class @PlayerControls : IInputActionCollection, IDisposable
                 {
                     ""name"": ""2D Vector"",
                     ""id"": ""3014ba64-1c2e-4571-9f87-fc7441f6ef3d"",
-                    ""path"": ""2DVector"",
-                    ""interactions"": ""Press"",
+                    ""path"": ""2DVector(mode=1)"",
+                    ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Move"",
@@ -800,6 +696,115 @@ public class @PlayerControls : IInputActionCollection, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""BaseMap"",
+            ""id"": ""6253cbd7-6982-4571-8301-ac978350210a"",
+            ""actions"": [
+                {
+                    ""name"": ""BaseMove"",
+                    ""type"": ""Value"",
+                    ""id"": ""c54656e2-6483-4198-bb79-1fcd15edbfb3"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """"
+                },
+                {
+                    ""name"": ""OpenMenu"",
+                    ""type"": ""Button"",
+                    ""id"": ""2058547b-5b03-499d-889f-f89b07391881"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
+                },
+                {
+                    ""name"": ""OpenFastTravel"",
+                    ""type"": ""Button"",
+                    ""id"": ""c32f50a1-aec4-4235-be62-26804620aeea"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": ""2D Vector"",
+                    ""id"": ""e03ffb40-7a2d-4797-b1f2-0f1832b1410a"",
+                    ""path"": ""2DVector(mode=1)"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""BaseMove"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""up"",
+                    ""id"": ""e03c75fa-7c3d-4e57-b60a-2ad5917c15ab"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Default"",
+                    ""action"": ""BaseMove"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""f0c8fbdf-3251-4898-abbb-19fbd44060fc"",
+                    ""path"": ""<Keyboard>/s"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Default"",
+                    ""action"": ""BaseMove"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""left"",
+                    ""id"": ""a6d8edfa-5846-42f9-995d-bf2fa57841c6"",
+                    ""path"": ""<Keyboard>/a"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Default"",
+                    ""action"": ""BaseMove"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""right"",
+                    ""id"": ""ee7ccbc5-8891-4834-91d9-bdca3bbbcb8f"",
+                    ""path"": ""<Keyboard>/d"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Default"",
+                    ""action"": ""BaseMove"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""3a2b8170-e6e1-4e3d-904d-f60e47ad90f0"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""OpenMenu"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c3e5b9eb-a832-456b-9626-056c9f057238"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""OpenFastTravel"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": [
@@ -818,8 +823,6 @@ public class @PlayerControls : IInputActionCollection, IDisposable
 }");
         // FieldBattle
         m_FieldBattle = asset.FindActionMap("FieldBattle", throwIfNotFound: true);
-        m_FieldBattle_Horizontal = m_FieldBattle.FindAction("Horizontal", throwIfNotFound: true);
-        m_FieldBattle_Vertical = m_FieldBattle.FindAction("Vertical", throwIfNotFound: true);
         m_FieldBattle_Select = m_FieldBattle.FindAction("Select", throwIfNotFound: true);
         m_FieldBattle_Move = m_FieldBattle.FindAction("Move", throwIfNotFound: true);
         m_FieldBattle_Back = m_FieldBattle.FindAction("Back", throwIfNotFound: true);
@@ -838,6 +841,11 @@ public class @PlayerControls : IInputActionCollection, IDisposable
         m_UI_TrackedDeviceOrientation = m_UI.FindAction("TrackedDeviceOrientation", throwIfNotFound: true);
         m_UI_Back = m_UI.FindAction("Back", throwIfNotFound: true);
         m_UI_OpenDetails = m_UI.FindAction("OpenDetails", throwIfNotFound: true);
+        // BaseMap
+        m_BaseMap = asset.FindActionMap("BaseMap", throwIfNotFound: true);
+        m_BaseMap_BaseMove = m_BaseMap.FindAction("BaseMove", throwIfNotFound: true);
+        m_BaseMap_OpenMenu = m_BaseMap.FindAction("OpenMenu", throwIfNotFound: true);
+        m_BaseMap_OpenFastTravel = m_BaseMap.FindAction("OpenFastTravel", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -887,8 +895,6 @@ public class @PlayerControls : IInputActionCollection, IDisposable
     // FieldBattle
     private readonly InputActionMap m_FieldBattle;
     private IFieldBattleActions m_FieldBattleActionsCallbackInterface;
-    private readonly InputAction m_FieldBattle_Horizontal;
-    private readonly InputAction m_FieldBattle_Vertical;
     private readonly InputAction m_FieldBattle_Select;
     private readonly InputAction m_FieldBattle_Move;
     private readonly InputAction m_FieldBattle_Back;
@@ -897,8 +903,6 @@ public class @PlayerControls : IInputActionCollection, IDisposable
     {
         private @PlayerControls m_Wrapper;
         public FieldBattleActions(@PlayerControls wrapper) { m_Wrapper = wrapper; }
-        public InputAction @Horizontal => m_Wrapper.m_FieldBattle_Horizontal;
-        public InputAction @Vertical => m_Wrapper.m_FieldBattle_Vertical;
         public InputAction @Select => m_Wrapper.m_FieldBattle_Select;
         public InputAction @Move => m_Wrapper.m_FieldBattle_Move;
         public InputAction @Back => m_Wrapper.m_FieldBattle_Back;
@@ -912,12 +916,6 @@ public class @PlayerControls : IInputActionCollection, IDisposable
         {
             if (m_Wrapper.m_FieldBattleActionsCallbackInterface != null)
             {
-                @Horizontal.started -= m_Wrapper.m_FieldBattleActionsCallbackInterface.OnHorizontal;
-                @Horizontal.performed -= m_Wrapper.m_FieldBattleActionsCallbackInterface.OnHorizontal;
-                @Horizontal.canceled -= m_Wrapper.m_FieldBattleActionsCallbackInterface.OnHorizontal;
-                @Vertical.started -= m_Wrapper.m_FieldBattleActionsCallbackInterface.OnVertical;
-                @Vertical.performed -= m_Wrapper.m_FieldBattleActionsCallbackInterface.OnVertical;
-                @Vertical.canceled -= m_Wrapper.m_FieldBattleActionsCallbackInterface.OnVertical;
                 @Select.started -= m_Wrapper.m_FieldBattleActionsCallbackInterface.OnSelect;
                 @Select.performed -= m_Wrapper.m_FieldBattleActionsCallbackInterface.OnSelect;
                 @Select.canceled -= m_Wrapper.m_FieldBattleActionsCallbackInterface.OnSelect;
@@ -934,12 +932,6 @@ public class @PlayerControls : IInputActionCollection, IDisposable
             m_Wrapper.m_FieldBattleActionsCallbackInterface = instance;
             if (instance != null)
             {
-                @Horizontal.started += instance.OnHorizontal;
-                @Horizontal.performed += instance.OnHorizontal;
-                @Horizontal.canceled += instance.OnHorizontal;
-                @Vertical.started += instance.OnVertical;
-                @Vertical.performed += instance.OnVertical;
-                @Vertical.canceled += instance.OnVertical;
                 @Select.started += instance.OnSelect;
                 @Select.performed += instance.OnSelect;
                 @Select.canceled += instance.OnSelect;
@@ -1077,6 +1069,55 @@ public class @PlayerControls : IInputActionCollection, IDisposable
         }
     }
     public UIActions @UI => new UIActions(this);
+
+    // BaseMap
+    private readonly InputActionMap m_BaseMap;
+    private IBaseMapActions m_BaseMapActionsCallbackInterface;
+    private readonly InputAction m_BaseMap_BaseMove;
+    private readonly InputAction m_BaseMap_OpenMenu;
+    private readonly InputAction m_BaseMap_OpenFastTravel;
+    public struct BaseMapActions
+    {
+        private @PlayerControls m_Wrapper;
+        public BaseMapActions(@PlayerControls wrapper) { m_Wrapper = wrapper; }
+        public InputAction @BaseMove => m_Wrapper.m_BaseMap_BaseMove;
+        public InputAction @OpenMenu => m_Wrapper.m_BaseMap_OpenMenu;
+        public InputAction @OpenFastTravel => m_Wrapper.m_BaseMap_OpenFastTravel;
+        public InputActionMap Get() { return m_Wrapper.m_BaseMap; }
+        public void Enable() { Get().Enable(); }
+        public void Disable() { Get().Disable(); }
+        public bool enabled => Get().enabled;
+        public static implicit operator InputActionMap(BaseMapActions set) { return set.Get(); }
+        public void SetCallbacks(IBaseMapActions instance)
+        {
+            if (m_Wrapper.m_BaseMapActionsCallbackInterface != null)
+            {
+                @BaseMove.started -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnBaseMove;
+                @BaseMove.performed -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnBaseMove;
+                @BaseMove.canceled -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnBaseMove;
+                @OpenMenu.started -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnOpenMenu;
+                @OpenMenu.performed -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnOpenMenu;
+                @OpenMenu.canceled -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnOpenMenu;
+                @OpenFastTravel.started -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnOpenFastTravel;
+                @OpenFastTravel.performed -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnOpenFastTravel;
+                @OpenFastTravel.canceled -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnOpenFastTravel;
+            }
+            m_Wrapper.m_BaseMapActionsCallbackInterface = instance;
+            if (instance != null)
+            {
+                @BaseMove.started += instance.OnBaseMove;
+                @BaseMove.performed += instance.OnBaseMove;
+                @BaseMove.canceled += instance.OnBaseMove;
+                @OpenMenu.started += instance.OnOpenMenu;
+                @OpenMenu.performed += instance.OnOpenMenu;
+                @OpenMenu.canceled += instance.OnOpenMenu;
+                @OpenFastTravel.started += instance.OnOpenFastTravel;
+                @OpenFastTravel.performed += instance.OnOpenFastTravel;
+                @OpenFastTravel.canceled += instance.OnOpenFastTravel;
+            }
+        }
+    }
+    public BaseMapActions @BaseMap => new BaseMapActions(this);
     private int m_DefaultSchemeIndex = -1;
     public InputControlScheme DefaultScheme
     {
@@ -1088,8 +1129,6 @@ public class @PlayerControls : IInputActionCollection, IDisposable
     }
     public interface IFieldBattleActions
     {
-        void OnHorizontal(InputAction.CallbackContext context);
-        void OnVertical(InputAction.CallbackContext context);
         void OnSelect(InputAction.CallbackContext context);
         void OnMove(InputAction.CallbackContext context);
         void OnBack(InputAction.CallbackContext context);
@@ -1109,5 +1148,11 @@ public class @PlayerControls : IInputActionCollection, IDisposable
         void OnTrackedDeviceOrientation(InputAction.CallbackContext context);
         void OnBack(InputAction.CallbackContext context);
         void OnOpenDetails(InputAction.CallbackContext context);
+    }
+    public interface IBaseMapActions
+    {
+        void OnBaseMove(InputAction.CallbackContext context);
+        void OnOpenMenu(InputAction.CallbackContext context);
+        void OnOpenFastTravel(InputAction.CallbackContext context);
     }
 }

@@ -10,7 +10,9 @@ public class PlayerController : MonoBehaviour
     private PlayerControls controls;
     private PlayerInput playerInput;
 
-    [SerializeField]private InputAction moveAction;
+    private Vector2 moveDirection;
+
+    [SerializeField]private float playerSpeed;
 
     private int frameWait;
     private int frameMoveWait;
@@ -19,7 +21,15 @@ public class PlayerController : MonoBehaviour
     private InputActionMap fieldBattleMap;
 
     private CharacterInfo selectedUnit;
-       
+
+    #region ACTION_VARIABLES
+    private InputAction baseMove;
+    private InputAction fieldBattleMove;
+    private InputAction select;
+    private InputAction back;
+    private InputAction openDetails;
+    private InputAction moveAction;
+    #endregion
 
     public TileInfo currentTile;
 
@@ -29,6 +39,7 @@ public class PlayerController : MonoBehaviour
 
     void Awake()
     {
+        DontDestroyOnLoad(this.gameObject);
         rigidBody2D = gameObject.GetComponent<Rigidbody2D>();
         frameWait = 0;
         frameMoveWait = 0;
@@ -37,18 +48,32 @@ public class PlayerController : MonoBehaviour
         playerInput = this.GetComponent<PlayerInput>();
         moveAction = playerInput.actions.FindAction("Move");
         fieldBattleMap = playerInput.actions.FindActionMap("FieldBattle");
+
+        SetActions();
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        thisMap = GameObject.Find("/MapInfo").GetComponent<BasicMapInfo>();
-        currentTile = thisMap.startingPositions[0].GetComponent<TileInfo>();
-        transform.position = currentTile.transform.position;
+        if (WorldStateInfo.Instance.currentMapInfo != null)
+        {
+            thisMap = GameObject.Find("/MapInfo").GetComponent<BasicMapInfo>();
+            currentTile = thisMap.startingPositions[0].GetComponent<TileInfo>();
+            transform.position = currentTile.transform.position;
+        }
 
         //controls.FieldBattle.Move.started += ctx => MovePlayer();
         //controls.FieldBattle.Select.canceled += _ => WorldStateInfo.Instance.battleController.SelectTile();
 
+    }
+
+    private void SetActions()
+    {
+        fieldBattleMove = playerInput.actions.FindAction("Move");
+        baseMove = playerInput.actions.FindAction("BaseMove");
+        select = playerInput.actions.FindAction("Select");
+        back = playerInput.actions.FindAction("Back");
+        openDetails = playerInput.actions.FindAction("OpenDetails");
     }
 
     private void OnEnable()
@@ -63,13 +88,27 @@ public class PlayerController : MonoBehaviour
         controls.Disable();
     }
 
+    public void OnAnimatorMove(InputAction.CallbackContext ctx)
+    {
+        Vector2 movement = ctx.ReadValue<Vector2>();
+
+        MovePlayer(movement);
+    }
 
     public void OnMove(InputValue inputValue)
     {
-        Vector2 movement = inputValue.Get<Vector2>();
+        moveDirection = inputValue.Get<Vector2>();
 
-        if (moveAction.ReadValueAsObject() != null)
-            MovePlayer(movement);
+        //Vector2 movement = inputValue.Get<Vector2>();
+
+        //if (moveAction.ReadValueAsObject() != null)
+        //    MovePlayer(movement);
+    }
+
+
+    public void OnBaseMove(InputValue value)
+    {
+        moveDirection = value.Get<Vector2>();
     }
 
     public void OnSelect()
@@ -119,8 +158,41 @@ public class PlayerController : MonoBehaviour
     //    {
     //        frameWait = 0;
     //    }
+
+        if(WorldStateInfo.Instance.playMode == PlayerMode.FIELD_BATTLE)
+        {
+            if (moveDirection != Vector2.zero)
+            {
+                MovePlayer(moveDirection.x, moveDirection.y);
+                frameMoveWait = frameMoveWait + 1;
+            }
+            else
+            {
+                moveHold = 0;
+                frameMoveWait = 0;
+            }
+        }
+        if(WorldStateInfo.Instance.playMode == PlayerMode.BASE_MAP)
+        {
+            if(moveDirection != Vector2.zero)
+                MoveInBase(moveDirection);
+        }
     }
 
+    public void SetControlsBasedOnPlayMode()
+    {
+        switch (WorldStateInfo.Instance.playMode)
+        {
+            case PlayerMode.FIELD_BATTLE:
+                SwitchControlType("FieldBattle");
+                break;
+            case PlayerMode.BASE_MAP:
+                SwitchControlType("BaseMap");
+                break;
+            default:
+                break;
+        }
+    }
 
 
     public void SwitchControlType(string actionMap)
@@ -146,6 +218,8 @@ public class PlayerController : MonoBehaviour
     public void MovePlayer(float horizontal, float vertical)
     {
         int movementWaitTime;
+
+        Debug.Log(horizontal + ":" + vertical);
 
         if(moveHold >= 3)
         {
@@ -220,34 +294,6 @@ public class PlayerController : MonoBehaviour
         StartCoroutine(SmoothMovement(position));
     }
 
-    public void MovePlayer()
-    {
-        Vector3 position = transform.position;
-
-        Vector2 direction = moveAction.ReadValue<Vector2>();
-
-        TileInfo newTile = null;
-
-
-        if (direction.x != 0)
-        {
-            if (currentTile.GetAdjacentTile(new Vector2(direction.x, 0)) != null)
-                newTile = currentTile.GetAdjacentTile(new Vector2(direction.x, 0)).GetComponent<TileInfo>();
-        }
-        else if (direction.y != 0)
-        {
-            if (currentTile.GetAdjacentTile(new Vector2(0, direction.y)) != null)
-                newTile = currentTile.GetAdjacentTile(new Vector2(0, direction.y)).GetComponent<TileInfo>();
-        }
-
-        if (newTile != null)
-        {
-            position = newTile.transform.position;
-            currentTile = newTile;
-        }
-
-        StartCoroutine(SmoothMovement(position));
-    }
 
     void MovePlayer(InputAction.CallbackContext context)
     {
@@ -283,7 +329,22 @@ public class PlayerController : MonoBehaviour
         StartCoroutine(SmoothMovement(newPosition, speed));
     }
 
-    
+    private void MoveInBase(Vector2 direction)
+    {
+        Vector3 position = transform.position;
+
+        position = new Vector3(position.x + (direction.x * playerSpeed), position.y + (direction.y * playerSpeed));
+
+        rigidBody2D.MovePosition(position);
+
+        //StartCoroutine(SmoothMovement(position, playerSpeed));
+    }
+
+    //Function to move player directly to new part of base
+    public void BaseTravelMovement(Vector2 newPosition)
+    {
+        transform.position = newPosition;
+    }
 
     private IEnumerator SmoothMovement(Vector3 end, float speed = .25f)
     {

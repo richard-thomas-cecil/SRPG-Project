@@ -56,7 +56,7 @@ public class CharacterInfo : MonoBehaviour
     private Rigidbody2D rigidbody2D;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         targetList = new List<CharacterInfo>();
         localTargets = new List<CharacterInfo>();

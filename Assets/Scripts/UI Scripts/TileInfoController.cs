@@ -10,14 +10,20 @@ public class TileInfoController : MonoBehaviour
 
     private GameObject tileInfoPanel;
 
+    private RectTransform canvasRectTransform;
+
     private TextMeshProUGUI tileType;
     private TextMeshProUGUI defenseBonus;
     private TextMeshProUGUI avoidBonus;
+
+    private float tilePanelPositionOffset = 144;
 
     // Start is called before the first frame update
     void Start()
     {
         tileInfoPanel = transform.Find("TileInfoPanel").gameObject;
+
+        canvasRectTransform = GetComponent<RectTransform>();
 
         tileType = tileInfoPanel.transform.Find("TileType").GetComponent<TextMeshProUGUI>();
         defenseBonus = tileInfoPanel.transform.Find("DefenseBonus").GetComponent<TextMeshProUGUI>();
@@ -37,6 +43,15 @@ public class TileInfoController : MonoBehaviour
         tileType.text = currentTile.tileName;
         defenseBonus.text = "Defense: " + currentTile.defBoost.ToString();
         avoidBonus.text = "Dodge: " + currentTile.dodgeBoost.ToString();
+
+        if(WorldStateInfo.Instance.player.currentTile.transform.position.x < WorldStateInfo.Instance.mainCamera.transform.position.x - 3.0f && WorldStateInfo.Instance.player.currentTile.transform.position.y < WorldStateInfo.Instance.mainCamera.transform.position.y - 1.0f)
+        {
+            tileInfoPanel.transform.position = new Vector3(canvasRectTransform.rect.width - tilePanelPositionOffset, tileInfoPanel.transform.position.y, tileInfoPanel.transform.position.z);
+        }
+        else
+        {
+            tileInfoPanel.transform.position = new Vector3(tilePanelPositionOffset, tileInfoPanel.transform.position.y, tileInfoPanel.transform.position.z);
+        }
 
         if (!gameObject.activeInHierarchy)
         {

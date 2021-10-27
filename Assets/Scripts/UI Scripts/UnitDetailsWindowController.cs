@@ -16,7 +16,7 @@ public class UnitDetailsWindowController : MonoBehaviour
     private List<GameObject> weaponStatsPanel;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         unitDetailsPanel = transform.Find("UnitDetailsPanel").gameObject;
         weaponsPanel = unitDetailsPanel.transform.Find("WeaponsPanel").gameObject;

@@ -42,17 +42,76 @@ public class BattleController : MonoBehaviour
 
     void Awake()
     {
+        stateQueue = new Stack<BattleState>();
+
+        playerCharacters = new List<CharacterInfo>();
+        playerCursor = GameObject.Find("Player").GetComponent<PlayerController>();
+
         
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        stateQueue = new Stack<BattleState>();
+        //actionMenu = WorldStateInfo.Instance.actionMenu.GetComponent<ActionsMenuController>();
+        //unitInfoController = WorldStateInfo.Instance.unitInfoPanel.GetComponent<UnitInfoController>();
+        //battlePreviewController = WorldStateInfo.Instance.battlePreview.GetComponent<BattlePreviewController>();
+        //tileInfoController = WorldStateInfo.Instance.tileInfoPanel.GetComponent<TileInfoController>();
+        //weaponInfoController = WorldStateInfo.Instance.weaponInfoPanel.GetComponent<WeaponInfoController>();
+        //healthPanelController = WorldStateInfo.Instance.healthPanel.GetComponent<HealthPanelController>();
+        //unitWindow = WorldStateInfo.Instance.unitWindow.GetComponent<UnitWindowController>();
+        //unitDetailsWindow = WorldStateInfo.Instance.unitDetailsWindow.GetComponent<UnitDetailsWindowController>();
+        //resultsScreen = WorldStateInfo.Instance.resultScreen.GetComponent<ResultsScreenController>();
 
-        playerCharacters = new List<CharacterInfo>();
-        playerCursor = GameObject.Find("Player").GetComponent<PlayerController>();
+        //animationController = GetComponent<BattleAnimationController>();
 
+        //mapInfo = WorldStateInfo.Instance.currentMapInfo;
+        //currentPhase = PHASE_LIST.PLAYER_PHASE;
+        //battleState = BattleState.START_STATE;
+
+        //enemies = mapInfo.enemies;
+        //playerCharacters = (mapInfo.playerTeam);
+
+        //playerHasMoved = new bool[playerCharacters.Count];
+        //enemyHasMoved = new bool[enemies.Count];
+
+        //unitWindow.BuildWindow(playerCharacters);
+
+        //for(int i = 0; i < enemyHasMoved.Length; i++)
+        //{
+        //    enemyHasMoved[i] = false;
+        //    if(i < playerHasMoved.Length)
+        //    {
+        //        playerHasMoved[i] = false;
+        //    }
+        //}
+
+        //actionMenu.InitialzeButtonFunctions();
+
+        //actionMenu.DisableUI();
+        //unitWindow.DisableWindow();
+        //unitDetailsWindow.DisablePanel();
+        //resultsScreen.DisableScreen();
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if(tileInfoController.currentTile != playerCursor.currentTile && battleState != BattleState.BATTLE_OVER)
+        {
+            tileInfoController.SetPanel(playerCursor.currentTile);
+            if(playerCursor.currentTile.occupant != null)
+                unitInfoController.SetPanel(playerCursor.currentTile.occupant);
+            else
+            {
+                unitInfoController.DisablePanel();
+            }
+        }
+
+    }
+
+    public void InitializeBattle()
+    {
         actionMenu = WorldStateInfo.Instance.actionMenu.GetComponent<ActionsMenuController>();
         unitInfoController = WorldStateInfo.Instance.unitInfoPanel.GetComponent<UnitInfoController>();
         battlePreviewController = WorldStateInfo.Instance.battlePreview.GetComponent<BattlePreviewController>();
@@ -77,35 +136,21 @@ public class BattleController : MonoBehaviour
 
         unitWindow.BuildWindow(playerCharacters);
 
-        for(int i = 0; i < enemyHasMoved.Length; i++)
+        for (int i = 0; i < enemyHasMoved.Length; i++)
         {
             enemyHasMoved[i] = false;
-            if(i < playerHasMoved.Length)
+            if (i < playerHasMoved.Length)
             {
                 playerHasMoved[i] = false;
             }
         }
 
+        actionMenu.InitialzeButtonFunctions();
+
         actionMenu.DisableUI();
         unitWindow.DisableWindow();
         unitDetailsWindow.DisablePanel();
         resultsScreen.DisableScreen();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if(tileInfoController.currentTile != playerCursor.currentTile && battleState != BattleState.BATTLE_OVER)
-        {
-            tileInfoController.SetPanel(playerCursor.currentTile);
-            if(playerCursor.currentTile.occupant != null)
-                unitInfoController.SetPanel(playerCursor.currentTile.occupant);
-            else
-            {
-                unitInfoController.DisablePanel();
-            }
-        }
-
     }
 
     //State machine to control battle flow. Should be called at the end of any potential action with the state to change to

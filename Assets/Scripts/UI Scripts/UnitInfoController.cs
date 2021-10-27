@@ -13,7 +13,7 @@ public class UnitInfoController : MonoBehaviour
     private TextMeshProUGUI healthText;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         unitInfoPanel = transform.Find("UnitInfoPanel").gameObject;
         healthNegative = unitInfoPanel.transform.Find("HealthNegative").gameObject;

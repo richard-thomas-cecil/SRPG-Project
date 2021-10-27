@@ -16,7 +16,7 @@ public class UnitWindowController : MonoBehaviour
     private List<GameObject> unitNamePanels = new List<GameObject>();
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         unitNameStaticPosition = transform.Find("NameDescriptivePanel").gameObject.GetComponent<RectTransform>();
         unitStatsStaticPosition = transform.Find("StatNamesPanel").gameObject.GetComponent<RectTransform>();

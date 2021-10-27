@@ -31,6 +31,10 @@ public class WorldStateInfo : MonoBehaviour
 
     public List<GameObject> UI_Prefabs;             //TBD
 
+    public PlayerController player;
+
+    public CameraController mainCamera;
+
     private Random.State currentSeed;
 
     void Awake()
@@ -44,15 +48,57 @@ public class WorldStateInfo : MonoBehaviour
         {
             _instance = this;
         }
-                
+
+        DontDestroyOnLoad(this.gameObject);
+
+        //if(GameObject.Find("MapInfo")!= null)
+        //    currentMapInfo = GameObject.Find("MapInfo").GetComponent<BasicMapInfo>();
+
+        //playMode = PlayerMode.FIELD_BATTLE;
+
+        
+        
+        //actionMenu = GameObject.Find("ActionMenu");
+        //unitInfoPanel = GameObject.Find("UnitInfoCanvas");
+        //battlePreview = GameObject.Find("BattlePreviewCanvas");
+        //tileInfoPanel = GameObject.Find("TileInfoCanvas");
+        //weaponInfoPanel = GameObject.Find("WeaponInfoCanvas");
+        //healthPanel = GameObject.Find("HealthCanvas");
+        //unitWindow = GameObject.Find("UnitWindow");
+        //unitDetailsWindow = GameObject.Find("UnitDetailsWindow");
+        //resultScreen = GameObject.Find("ResultScreen");
+
+        player = GameObject.Find("Player").GetComponent<PlayerController>();
+        mainCamera = GameObject.Find("Main Camera").GetComponent<CameraController>();
+        battleController.enabled = false;
+    }
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        //BuildGraph from current mapInfo
+        //if (currentMapInfo != null)
+        //{
+        //    mapTileGraph = new Graph();
+        //    mapTileGraph.BuildGraph(currentMapInfo.startingPositions[0]);
+        //    dijsktrasFullMap = new Dijsktras(mapTileGraph);
+        //}
+        //if(playMode == PlayerMode.BASE_MAP)
+        //{
+        //    battleController.enabled = false;
+        //}
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        
+    }
+
+    private void StartFieldBattle()
+    {
         currentMapInfo = GameObject.Find("MapInfo").GetComponent<BasicMapInfo>();
 
-        playMode = PlayerMode.FIELD_BATTLE;
-
-        //BuildGraph from current mapInfo
-        mapTileGraph = new Graph();
-        mapTileGraph.BuildGraph(currentMapInfo.startingPositions[0]);
-        dijsktrasFullMap = new Dijsktras(mapTileGraph);
         actionMenu = GameObject.Find("ActionMenu");
         unitInfoPanel = GameObject.Find("UnitInfoCanvas");
         battlePreview = GameObject.Find("BattlePreviewCanvas");
@@ -62,17 +108,14 @@ public class WorldStateInfo : MonoBehaviour
         unitWindow = GameObject.Find("UnitWindow");
         unitDetailsWindow = GameObject.Find("UnitDetailsWindow");
         resultScreen = GameObject.Find("ResultScreen");
-    }
 
-    // Start is called before the first frame update
-    void Start()
-    {
-    }
+        mapTileGraph = new Graph();
+        mapTileGraph.BuildGraph(currentMapInfo.startingPositions[0]);
+        dijsktrasFullMap = new Dijsktras(mapTileGraph);
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        battleController.enabled = true;
+
+        battleController.InitializeBattle();
     }
 
     //Pulls battleState from battle Controller.
@@ -87,5 +130,24 @@ public class WorldStateInfo : MonoBehaviour
         int nextRand = UnityEngine.Random.Range(0, 100);
         currentSeed = UnityEngine.Random.state;
         return nextRand;
+    }
+
+    public void SetPlayMode(PlayerMode newPlayMode)
+    {
+        playMode = newPlayMode;
+        player.SetControlsBasedOnPlayMode();
+    }
+
+    public void InitializeLevel(PlayerMode newPlayMode, Vector3 cameraBoundsUpper, Vector3 cameraBoundsLower, float cameraSpeed)
+    {
+        playMode = newPlayMode;
+        player.SetControlsBasedOnPlayMode();
+
+        mainCamera.SetCameraSceneDefaults(cameraBoundsUpper, cameraBoundsLower, cameraSpeed);
+
+        if(playMode == PlayerMode.FIELD_BATTLE)
+        {
+            StartFieldBattle();
+        }
     }
 }

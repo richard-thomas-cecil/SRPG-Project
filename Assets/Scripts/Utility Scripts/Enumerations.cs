@@ -28,7 +28,8 @@ public enum DAMAGE_TYPE
 //Player mode used in WorldStateInfo to track whether player is in battle, prebattle menu, or in between battle free roam
 public enum PlayerMode
 {
-    FIELD_BATTLE
+    FIELD_BATTLE,
+    BASE_MAP
 }
 
 
@@ -103,3 +104,5 @@ public enum RESULT_TYPE
     VICTORY,
     DEFEAT
 }
+
+

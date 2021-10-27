@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   characterType: 0
   CharacterName: Test 3
-  HP: 9
+  HP: 13
   HP_CURRENT: 9
   PHY: 5
   PREC: 5

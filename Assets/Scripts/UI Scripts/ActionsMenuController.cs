@@ -33,7 +33,7 @@ public class ActionsMenuController : MonoBehaviour
     [SerializeField]private GameObject weaponButtonPrefab;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         //Intialize variables
         currentActionList = new List<ACTION_BUTTON_LIST>();
@@ -49,22 +49,14 @@ public class ActionsMenuController : MonoBehaviour
         targetPanel = transform.Find("TargetPanel").gameObject;
         itemActionPanel = transform.Find("ItemActionPanel").gameObject;
 
-        buttons = new ButtonInfo[buttonPool.transform.childCount];
+        
 
-        //Intialize buttons array with all buttons in ButtonPool
-        //Buttons have defined ID from ACTION_BUTTON_LIST enumeration
-        //Button ID should be assigned in Inspector
-        for (int i = 0; i < buttons.Length; i++)
-        {
-            ButtonInfo newButton = buttonPool.transform.GetChild(i).GetComponent<ButtonInfo>();
-            buttons[(int)newButton.buttonID] = newButton;
-        }
 
-        InitialzeButtonFunctions();
 
         menuPanel.SetActive(false);
         itemPanel.SetActive(false);
         itemActionPanel.SetActive(false);
+
 
         //foreach (var button in buttons)
         //{
@@ -72,6 +64,12 @@ public class ActionsMenuController : MonoBehaviour
         //}
 
         //ResizeMenuPanel();
+    }
+
+    private void Start()
+    {
+        //InitialzeButtonFunctions();
+
     }
 
     // Update is called once per frame
@@ -91,10 +89,22 @@ public class ActionsMenuController : MonoBehaviour
         this.gameObject.SetActive(true);
     }
 
-    private void InitialzeButtonFunctions()
+    public void InitialzeButtonFunctions()
     {
-        foreach(var button in buttons)
+        buttons = new ButtonInfo[buttonPool.transform.childCount];
+
+        //Intialize buttons array with all buttons in ButtonPool
+        //Buttons have defined ID from ACTION_BUTTON_LIST enumeration
+        //Button ID should be assigned in Inspector
+        for (int i = 0; i < buttons.Length; i++)
         {
+            ButtonInfo newButton = buttonPool.transform.GetChild(i).GetComponent<ButtonInfo>();
+            buttons[(int)newButton.buttonID] = newButton;
+        }
+
+        foreach (var button in buttons)
+        {
+            Debug.Log(button.name);
             switch (button.buttonID)
             {
                 case ACTION_BUTTON_LIST.WAIT:
