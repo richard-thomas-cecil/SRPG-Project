@@ -19,6 +19,7 @@ public class WorldStateInfo : MonoBehaviour
 
     public BattleController battleController;       //Battle controller. BattleController script should be attached to same object as this script.
 
+    public GameObject mainUICanvas;
     public GameObject actionMenu;                   
     public GameObject unitInfoPanel;
     public GameObject battlePreview;
@@ -97,17 +98,19 @@ public class WorldStateInfo : MonoBehaviour
 
     private void StartFieldBattle()
     {
+        mainUICanvas = GameObject.Find("MainUICanvas");
         currentMapInfo = GameObject.Find("MapInfo").GetComponent<BasicMapInfo>();
 
         actionMenu = GameObject.Find("ActionMenu");
-        unitInfoPanel = GameObject.Find("UnitInfoCanvas");
-        battlePreview = GameObject.Find("BattlePreviewCanvas");
-        tileInfoPanel = GameObject.Find("TileInfoCanvas");
-        weaponInfoPanel = GameObject.Find("WeaponInfoCanvas");
-        healthPanel = GameObject.Find("HealthCanvas");
-        unitWindow = GameObject.Find("UnitWindow");
-        unitDetailsWindow = GameObject.Find("UnitDetailsWindow");
-        resultScreen = GameObject.Find("ResultScreen");
+
+        unitInfoPanel = mainUICanvas.transform.Find("UnitInfoPane").gameObject;
+        battlePreview = mainUICanvas.transform.Find("BattlePreviewPane").gameObject;
+        tileInfoPanel = mainUICanvas.transform.Find("TileInfoPane").gameObject;
+        weaponInfoPanel = mainUICanvas.transform.Find("WeaponInfoPane").gameObject;
+        healthPanel = mainUICanvas.transform.Find("HealthPane").gameObject;
+        unitWindow = mainUICanvas.transform.Find("UnitWindowPane").gameObject;
+        unitDetailsWindow = mainUICanvas.transform.Find("UnitDetailsPane").gameObject;
+        resultScreen = mainUICanvas.transform.Find("ResultsScreenPane").gameObject;
 
         mapTileGraph = new Graph();
         mapTileGraph.BuildGraph(currentMapInfo.startingPositions[0]);
