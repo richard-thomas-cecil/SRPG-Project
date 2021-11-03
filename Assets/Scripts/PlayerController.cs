@@ -230,7 +230,6 @@ public class PlayerController : MonoBehaviour
     {
         int movementWaitTime;
 
-        Debug.Log(horizontal + ":" + vertical);
 
         if(moveHold >= 3)
         {

@@ -104,7 +104,7 @@ public class ActionsMenuController : MonoBehaviour
 
         foreach (var button in buttons)
         {
-            Debug.Log(button.name);
+
             switch (button.buttonID)
             {
                 case ACTION_BUTTON_LIST.WAIT:
