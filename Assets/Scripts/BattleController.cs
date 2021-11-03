@@ -875,6 +875,8 @@ public class BattleController : MonoBehaviour
             targetedUnit.currentTile.SetUnoccupied();
             targetedUnit.currentTile = null;
             targetedUnit.gameObject.SetActive(false);
+
+
         }
         if (selectedUnit.flagIsDead)
         {

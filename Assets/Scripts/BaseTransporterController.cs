@@ -22,10 +22,11 @@ public class BaseTransporterController : MonoBehaviour
         
     }
 
-    private void MovePlayerToLocation()
+    public void MovePlayerToLocation()
     {
         WorldStateInfo.Instance.player.BaseTravelMovement(movementLocation);
         WorldStateInfo.Instance.mainCamera.SetCameraSceneDefaults(newCameraBoundUpper, newCameraBoundLower);
+        WorldStateInfo.Instance.baseMenuCanvas.DisableMenues();
     }
 
     private void OnTriggerEnter2D(Collider2D other)

@@ -29,6 +29,8 @@ public class WorldStateInfo : MonoBehaviour
     public GameObject unitDetailsWindow;
     public GameObject resultScreen;
 
+    public BaseUIController baseMenuCanvas;
+
     public List<GameObject> UI_Prefabs;             //TBD
 
     public PlayerController player;
@@ -118,6 +120,13 @@ public class WorldStateInfo : MonoBehaviour
         battleController.InitializeBattle();
     }
 
+    private void StartBaseMode()
+    {
+        baseMenuCanvas = GameObject.Find("BaseUICanvas").GetComponent<BaseUIController>();
+
+        baseMenuCanvas.DisableMenues();
+    }
+
     //Pulls battleState from battle Controller.
     //Mostly exsists to cleanup the code a little
     public BattleState GetBattleState()
@@ -148,6 +157,10 @@ public class WorldStateInfo : MonoBehaviour
         if(playMode == PlayerMode.FIELD_BATTLE)
         {
             StartFieldBattle();
+        }
+        if(playMode == PlayerMode.BASE_MAP)
+        {
+            StartBaseMode();
         }
     }
 }

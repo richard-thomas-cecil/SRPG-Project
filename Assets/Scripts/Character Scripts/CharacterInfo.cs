@@ -18,6 +18,9 @@ public class CharacterInfo : MonoBehaviour
 {
     [SerializeField]private CharacterData baseCharacterData;
     [HideInInspector] public CharacterData characterData;
+
+    [SerializeField] private const int defaultUpgradePoints = 15;
+
     //public Graph moveableTiles;
     public List<Node> moveableTiles;
     public Graph subGraph;
@@ -422,4 +425,25 @@ public class CharacterInfo : MonoBehaviour
     {
         return rigidbody2D;
     }
+
+    public int CalculateExperience(CharacterInfo defeatedEnemy)
+    {
+        int expGain = defeatedEnemy.characterData.BASE_EXP_VALUE - (((characterData.LEVEL - defeatedEnemy.characterData.LEVEL) ^ 3) / 10);
+
+        characterData.EXP = characterData.EXP + expGain;
+
+        return expGain;
+    }
+
+    public void ProcessLevelUP()
+    {
+        int expLevels = characterData.EXP / 100;
+
+        if(expLevels > characterData.LEVEL)
+        {
+            characterData.UPGRADE_POINTS = characterData.UPGRADE_POINTS + ((expLevels - characterData.LEVEL) * defaultUpgradePoints);
+            characterData.LEVEL = expLevels;
+        }
+    }
+
 }

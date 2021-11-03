@@ -724,6 +724,14 @@ public class @PlayerControls : IInputActionCollection, IDisposable
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """"
+                },
+                {
+                    ""name"": ""Back"",
+                    ""type"": ""Button"",
+                    ""id"": ""540f8dab-46f8-49cd-a2db-69231406c08e"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -799,8 +807,19 @@ public class @PlayerControls : IInputActionCollection, IDisposable
                     ""path"": ""<Keyboard>/q"",
                     ""interactions"": """",
                     ""processors"": """",
-                    ""groups"": """",
+                    ""groups"": ""Default"",
                     ""action"": ""OpenFastTravel"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1bcf640f-41dd-4ccd-a413-ed037bcf1f36"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Default"",
+                    ""action"": ""Back"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -846,6 +865,7 @@ public class @PlayerControls : IInputActionCollection, IDisposable
         m_BaseMap_BaseMove = m_BaseMap.FindAction("BaseMove", throwIfNotFound: true);
         m_BaseMap_OpenMenu = m_BaseMap.FindAction("OpenMenu", throwIfNotFound: true);
         m_BaseMap_OpenFastTravel = m_BaseMap.FindAction("OpenFastTravel", throwIfNotFound: true);
+        m_BaseMap_Back = m_BaseMap.FindAction("Back", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -1076,6 +1096,7 @@ public class @PlayerControls : IInputActionCollection, IDisposable
     private readonly InputAction m_BaseMap_BaseMove;
     private readonly InputAction m_BaseMap_OpenMenu;
     private readonly InputAction m_BaseMap_OpenFastTravel;
+    private readonly InputAction m_BaseMap_Back;
     public struct BaseMapActions
     {
         private @PlayerControls m_Wrapper;
@@ -1083,6 +1104,7 @@ public class @PlayerControls : IInputActionCollection, IDisposable
         public InputAction @BaseMove => m_Wrapper.m_BaseMap_BaseMove;
         public InputAction @OpenMenu => m_Wrapper.m_BaseMap_OpenMenu;
         public InputAction @OpenFastTravel => m_Wrapper.m_BaseMap_OpenFastTravel;
+        public InputAction @Back => m_Wrapper.m_BaseMap_Back;
         public InputActionMap Get() { return m_Wrapper.m_BaseMap; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -1101,6 +1123,9 @@ public class @PlayerControls : IInputActionCollection, IDisposable
                 @OpenFastTravel.started -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnOpenFastTravel;
                 @OpenFastTravel.performed -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnOpenFastTravel;
                 @OpenFastTravel.canceled -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnOpenFastTravel;
+                @Back.started -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnBack;
+                @Back.performed -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnBack;
+                @Back.canceled -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnBack;
             }
             m_Wrapper.m_BaseMapActionsCallbackInterface = instance;
             if (instance != null)
@@ -1114,6 +1139,9 @@ public class @PlayerControls : IInputActionCollection, IDisposable
                 @OpenFastTravel.started += instance.OnOpenFastTravel;
                 @OpenFastTravel.performed += instance.OnOpenFastTravel;
                 @OpenFastTravel.canceled += instance.OnOpenFastTravel;
+                @Back.started += instance.OnBack;
+                @Back.performed += instance.OnBack;
+                @Back.canceled += instance.OnBack;
             }
         }
     }
@@ -1154,5 +1182,6 @@ public class @PlayerControls : IInputActionCollection, IDisposable
         void OnBaseMove(InputAction.CallbackContext context);
         void OnOpenMenu(InputAction.CallbackContext context);
         void OnOpenFastTravel(InputAction.CallbackContext context);
+        void OnBack(InputAction.CallbackContext context);
     }
 }

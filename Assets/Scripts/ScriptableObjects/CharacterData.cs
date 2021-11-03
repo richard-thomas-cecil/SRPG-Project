@@ -8,6 +8,9 @@ public class CharacterData : ScriptableObject
     public CHARACTER_TYPE characterType;
     public string CharacterName;
 
+    public int LEVEL;
+    public int EXP;
+
     public int HP;          //Hit Points
     public int HP_CURRENT;  //Hit Points Current
     public int PHY;         //Melee attack strength
@@ -33,4 +36,17 @@ public class CharacterData : ScriptableObject
     public int supportRangeMin;
     public int supportRangeMax;
 
+    #region STAT_WEIGHTS
+    public int HP_WEIGHT;
+    public int PHY_WEIGHT;
+    public int PREC_WEIGHT;
+    public int AIM_WEIGHT;
+    public int ARMOR_WEIGHT;
+    public int SHIELD_WEIGHT;
+    public int SPEED_WEIGHT;
+    #endregion
+
+    public int UPGRADE_POINTS;
+
+    public int BASE_EXP_VALUE;
 }

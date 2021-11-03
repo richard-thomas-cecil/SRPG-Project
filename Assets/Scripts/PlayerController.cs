@@ -13,6 +13,7 @@ public class PlayerController : MonoBehaviour
     private Vector2 moveDirection;
 
     [SerializeField]private float playerSpeed;
+    
 
     private int frameWait;
     private int frameMoveWait;
@@ -118,12 +119,22 @@ public class PlayerController : MonoBehaviour
 
     public void OnBack()
     {
-        WorldStateInfo.Instance.battleController.ReverseBattleState();
+        if(WorldStateInfo.Instance.playMode == PlayerMode.FIELD_BATTLE)
+            WorldStateInfo.Instance.battleController.ReverseBattleState();
+        if (WorldStateInfo.Instance.playMode == PlayerMode.BASE_MAP)
+            WorldStateInfo.Instance.baseMenuCanvas.DisableMenues();
+
     }
 
     public void OnOpenDetails()
     {
         WorldStateInfo.Instance.battleController.OpenUnitDetails();
+    }
+
+    public void OnOpenFastTravel()
+    {
+        WorldStateInfo.Instance.baseMenuCanvas.EnableFastTravelPanel();
+        SwitchControlType("UI");
     }
     //public void OnCancel()
     //{
